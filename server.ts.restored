@@ -1,0 +1,581 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import express from "express";
+import path from "path";
+import { createServer as createViteServer } from "vite";
+import { GoogleGenAI, Type, Modality } from "@google/genai";
+import dotenv from "dotenv";
+import { createServer } from "http";
+import { WebSocketServer } from "ws";
+
+// Load environment variables
+dotenv.config();
+
+const app = express();
+const PORT = 3000;
+
+// Middleware for parsing json and urlencoded data
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ extended: true, limit: "50mb" }));
+
+// Initialize Gemini Client
+// Using the recommended environment variable and User-Agent header
+const apiKey = process.env.GEMINI_API_KEY;
+
+// Check if API key is provided and warn (without crashing startup, as per guidelines)
+if (!apiKey) {
+  console.warn("⚠️ Warning: GEMINI_API_KEY is not defined. AI functionality will fail to initialize.");
+}
+
+const getAiClient = (): GoogleGenAI => {
+  if (!process.env.GEMINI_API_KEY) {
+    throw new Error("GEMINI_API_KEY environment variable is required to generate study plans.");
+  }
+  return new GoogleGenAI({
+    apiKey: process.env.GEMINI_API_KEY,
+    httpOptions: {
+      headers: {
+        'User-Agent': 'aistudio-build',
+      }
+    }
+  });
+};
+
+// API Endpoint to generate customized study plans using gemini-3.5-flash
+app.post("/api/generate-plan", async (req, res) => {
+  try {
+    const { subject, timeAvailable, topicKeywords, difficulty, notes } = req.body;
+
+    if (!subject) {
+      res.status(400).json({ error: "Subject is required" });
+      return;
+    }
+
+    const ai = getAiClient();
+    
+    // Construct instructions and prompt
+    const systemInstruction = 
+      "You are a master academic advisor and cognitive learning expert. " +
+      "Your goal is to break down complex study subjects into sequential, highly actionable study tasks and milestones. " +
+      "Each study task should have a clear study focus, recommended duration (typically 30-120 minutes), " +
+      "priority level (high, medium, low) indicating critical foundational sequence, and detailed supportive notes/guidance.";
+
+    const prompt = `Create a custom, step-by-step study schedule for the subject: "${subject}".
+- Total target study hours to plan: ${timeAvailable || 4} hours.
+- Core topics / keywords to cover: ${topicKeywords || "fundamentals and key concepts"}.
+- Intended study depth/difficulty: ${difficulty || "intermediate"}.
+${notes ? `- Additional user context or goals: "${notes}"` : ""}
+
+Deconstruct this study goal into a practical, highly focused list of study tasks/sessions. Be realistic with the times. For example, break ${timeAvailable || 4} hours into distinct sub-tasks (e.g., 45-minute or 60-minute blocks) totaling approximately the target hours.`;
+
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: prompt,
+      config: {
+        systemInstruction,
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            success: { type: Type.BOOLEAN },
+            summary: { 
+              type: Type.STRING, 
+              description: "A 2-3 sentence reassuring booster summary explaining the strategic approach of this study plan." 
+            },
+            tasks: {
+              type: Type.ARRAY,
+              description: "A chronological list of highly focused study task modules/sessions.",
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  title: { 
+                    type: Type.STRING, 
+                    description: "Explicit, action-oriented title of the study block (e.g., 'Master Eigenvectors & Eigenvalues Practice')." 
+                  },
+                  durationMinutes: { 
+                    type: Type.INTEGER, 
+                    description: "Suggested duration of the session in minutes (prefer standard increments like 30, 45, 60, 90)." 
+                  },
+                  priority: { 
+                    type: Type.STRING, 
+                    description: "Execution sequence priority.",
+                    enum: ["high", "medium", "low"]
+                  },
+                  notes: { 
+                    type: Type.STRING, 
+                    description: "Specific active-recall techniques, sub-topics, or exercises to run during this block." 
+                  }
+                },
+                required: ["title", "durationMinutes", "priority", "notes"]
+              }
+            }
+          },
+          required: ["success", "summary", "tasks"]
+        }
+      }
+    });
+
+    const jsonText = response.text || "";
+    const parsedData = JSON.parse(jsonText.trim());
+    res.json(parsedData);
+  } catch (error: any) {
+    res.status(500).json({ 
+      error: "Failed to generate study plan", 
+      details: (error.message || String(error)).includes("429") || (error.message || String(error)).includes("quota") ? "API Key Quota Exceeded. Please check your billing details or upgrade to a paid tier." : error.message || String(error) 
+    });
+  }
+});
+
+// API Endpoint for AI Study Buddy (Chat / Context Q&A)
+app.post("/api/chat-buddy", async (req, res) => {
+  try {
+    const { question, history, subjectContext } = req.body;
+
+    if (!question) {
+      res.status(400).json({ error: "Question is required." });
+      return;
+    }
+
+    const ai = getAiClient();
+    
+    // Construct message history for context or simulate it
+    let systemInstruction = `You are my personal AI study partner.
+Your job is not only to create a timetable, but also to coach me every day.
+You should help me decide what to study first, what to revise, what to skip for now, and how to recover if I miss a day.
+
+You must:
+- Turn big goals into small daily tasks.
+- Keep the plan simple and realistic.
+- Change the schedule automatically when my routine changes.
+- Remind me to revise old topics before learning new ones.
+- Give me practice questions and quick self-tests.
+- Track my progress and point out weak topics.
+- Encourage me without being cheesy.
+
+When answering, always include:
+- Today’s most important task.
+- One revision task.
+- One practice task.
+- One break recommendation.
+- One next-step suggestion.
+
+You are an advanced AI Study Planner and Academic Coach.
+Your mission is to help the student study smarter, stay consistent, and improve results without burnout. You should create realistic, personalized, and adaptive study plans that feel simple to follow every day.
+
+CORE BEHAVIOR
+- Ask only the minimum missing questions needed to create a useful plan.
+- If enough information is already given, start planning immediately.
+- Always make the plan realistic, not perfect.
+- Prioritize consistency over intensity.
+- Adapt automatically when the student misses a session, finishes early, or becomes busy.
+- Focus on active learning, revision, recall, and practice tests instead of passive reading only.
+
+WHAT YOU MUST COLLECT
+If not already provided, ask for:
+- Goal or exam name.
+- Subjects and topics.
+- Deadline or exam date.
+- Current class/level.
+- Daily study time available.
+- School/tuition/coaching schedule.
+- Weak subjects or hard topics.
+- Strong subjects or easy topics.
+- Preferred study style.
+- Any fixed commitments.
+- Whether the student wants short sessions, long sessions, or mixed sessions.
+
+PLANNING RULES
+1. Break every subject into small topics and subtopics.
+2. Start with difficult topics when energy is highest.
+3. Mix new learning with revision.
+4. Use spaced repetition automatically.
+5. Include practice questions after each major topic.
+6. Include weekly review and mock test sessions.
+7. Include short breaks between sessions.
+8. Avoid overloading any single day.
+9. Leave buffer time for school work and unexpected delays.
+10. If the schedule is too aggressive, reduce it and explain what was changed.
+
+SPACED REVISION RULES
+- Review important material after 1 day, 3 days, 7 days, and 30 days.
+- Increase revision frequency for weak topics.
+- Add quick recap sessions before tests and exams.
+- Use active recall, flashcards, self-quizzes, and summary writing.
+
+DAILY PLANNING RULES
+- Give the student a clear daily priority list.
+- Show only the most important tasks for today.
+- Add estimated time for each task.
+- Add one focus goal for the day.
+- Add one quick motivation line.
+- Add one short end-of-day reflection question.
+
+OUTPUT STYLE
+Always return the plan in a clean, structured format.
+Use simple language.
+Use tables when helpful.
+Keep the plan easy to scan on a phone.
+
+REQUIRED OUTPUT FORMAT
+1. Today’s plan
+- Top 3 priorities.
+- Time blocks.
+- Breaks.
+- Revision item.
+- Practice item.
+
+2. This week’s plan
+- Day-by-day schedule.
+- Subjects and topics.
+- Study duration for each day.
+- Revision and practice sessions.
+
+3. Full study roadmap
+- Week 1.
+- Week 2.
+- Week 3.
+- Continue until the deadline.
+- Major milestones.
+
+4. Revision schedule
+- What to revise.
+- When to revise.
+- Why it matters.
+
+5. Practice test plan
+- Mini tests.
+- Weekly tests.
+- Full mock tests.
+- Error review sessions.
+
+6. Progress tracking
+- Completed tasks.
+- Weak areas.
+- Strong areas.
+- Study streak.
+- Remaining topics.
+
+7. If the student is behind
+- Reschedule the plan.
+- Reduce less important tasks.
+- Protect the highest-priority topics.
+- Give a catch-up plan.
+
+SPECIAL MODES
+If the student asks for:
+- Exam mode: focus more on revision, mock tests, and fast recall.
+- School day mode: create a lighter schedule around classes.
+- Weekend mode: create longer focused sessions.
+- Catch-up mode: recover missed work without overload.
+- Emergency mode: create a short revision plan for today only.
+
+QUALITY RULES
+- Do not give vague advice.
+- Do not make the plan too long to follow.
+- Do not ignore deadlines.
+- Do not make the student study for unrealistic hours.
+- Do not repeat the same task in different words.
+- Do not forget breaks and rest.
+- Do not skip revision.
+- Do not ignore weak subjects.
+
+FINAL RESPONSE
+Before finalizing, check:
+- Is the plan realistic?
+- Is the workload balanced?
+- Are revision sessions included?
+- Are practice questions included?
+- Is there enough flexibility?
+- Would a Class 10 student actually follow this?
+
+If any answer is no, fix the plan before showing it.`;
+
+    if (subjectContext) {
+      systemInstruction += ` The student is currently studying: ${subjectContext}. Target your advice or answers around this subject context where relevant.`;
+    }
+
+    const prompt = question;
+
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: prompt,
+      config: {
+        systemInstruction,
+        temperature: 0.7,
+      }
+    });
+
+    res.json({ answer: response.text });
+  } catch (error: any) {
+    res.status(500).json({ 
+      error: "Failed to query AI Study Buddy", 
+      details: (error.message || String(error)).includes("429") || (error.message || String(error)).includes("quota") ? "API Key Quota Exceeded. Please check your billing details or upgrade to a paid tier." : error.message || String(error) 
+    });
+  }
+});
+
+// API Endpoint to generate images for doubts topics
+app.post("/api/generate-image", async (req, res) => {
+  try {
+    const { prompt } = req.body;
+    if (!prompt) {
+      res.status(400).json({ error: "Prompt is required" });
+      return;
+    }
+
+    const ai = getAiClient();
+    const response = await ai.models.generateContent({
+      model: "gemini-3.1-flash-lite-image",
+      contents: `Educational step-by-step diagram, clear and simple, to help understand: ${prompt}. Minimalist, high quality, vector style, informative labels, white background.`,
+      config: {
+        imageConfig: {
+          aspectRatio: "16:9",
+          imageSize: "1K"
+        }
+      }
+    });
+
+    let base64Image = null;
+    if (response.candidates?.[0]?.content?.parts) {
+      for (const part of response.candidates[0].content.parts) {
+        if (part.inlineData) {
+          base64Image = part.inlineData.data;
+          break;
+        }
+      }
+    }
+
+    if (!base64Image) {
+      throw new Error("No image was returned from the model.");
+    }
+
+    res.json({ imageBase64: base64Image });
+  } catch (error: any) {
+    res.status(500).json({ 
+      error: "Failed to generate image", 
+      details: (error.message || String(error)).includes("429") || (error.message || String(error)).includes("quota") ? "API Key Quota Exceeded. Please check your billing details or upgrade to a paid tier." : error.message || String(error) 
+    });
+  }
+});
+
+// API Endpoint to generate a quiz
+app.post("/api/generate-quiz", async (req, res) => {
+  try {
+    const { topic, difficulty, numberOfQuestions } = req.body;
+    if (!topic) {
+      res.status(400).json({ error: "Topic is required" });
+      return;
+    }
+
+    const ai = getAiClient();
+    const systemInstruction = "You are an expert educator. Create a multiple-choice quiz that tests deep understanding, not just memorization.";
+    const prompt = `Generate a quiz about: "${topic}". Difficulty: ${difficulty || "intermediate"}. Number of questions: ${numberOfQuestions || 5}.`;
+
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: prompt,
+      config: {
+        systemInstruction,
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            title: { type: Type.STRING },
+            questions: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  questionText: { type: Type.STRING },
+                  options: {
+                    type: Type.ARRAY,
+                    items: { type: Type.STRING }
+                  },
+                  correctAnswerIndex: { type: Type.INTEGER, description: "0-indexed position of the correct option." },
+                  explanation: { type: Type.STRING }
+                },
+                required: ["questionText", "options", "correctAnswerIndex", "explanation"]
+              }
+            }
+          },
+          required: ["title", "questions"]
+        }
+      }
+    });
+
+    const jsonText = response.text || "";
+    const parsedData = JSON.parse(jsonText.trim());
+    res.json(parsedData);
+  } catch (error: any) {
+    res.status(500).json({ 
+      error: "Failed to generate quiz", 
+      details: (error.message || String(error)).includes("429") || (error.message || String(error)).includes("quota") ? "API Key Quota Exceeded. Please check your billing details or upgrade to a paid tier." : error.message || String(error) 
+    });
+  }
+});
+
+
+// API Endpoint to analyze uploaded documents
+app.post("/api/analyze-document", async (req, res) => {
+  try {
+    const { fileData, mimeType, promptText } = req.body;
+    if (!fileData || !mimeType) {
+      res.status(400).json({ error: "File data and mimeType are required" });
+      return;
+    }
+
+    const ai = getAiClient();
+    const prompt = promptText || "Analyze this document and provide a comprehensive summary of its contents.";
+    
+    // Some formats like PDF might be better with gemini-2.5-pro, but flash is fast
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: [
+        {
+          role: 'user',
+          parts: [
+            { text: prompt },
+            {
+              inlineData: {
+                data: fileData,
+                mimeType: mimeType
+              }
+            }
+          ]
+        }
+      ]
+    });
+
+    res.json({ summary: response.text });
+  } catch (error: any) {
+    res.status(500).json({ 
+      error: "Failed to analyze document", 
+      details: (error.message || String(error)).includes("429") || (error.message || String(error)).includes("quota") ? "API Key Quota Exceeded. Please check your billing details or upgrade to a paid tier." : error.message || String(error) 
+    });
+  }
+});
+
+// API Endpoint to generate flashcards
+app.post("/api/generate-flashcards", async (req, res) => {
+  try {
+    const { topic, difficulty, numberOfCards } = req.body;
+    if (!topic) {
+      res.status(400).json({ error: "Topic is required" });
+      return;
+    }
+
+    const ai = getAiClient();
+    const systemInstruction = "You are an expert tutor. Create a set of flashcards for memorization. Each card must have a clear 'front' (question/concept) and 'back' (answer/definition).";
+    const prompt = `Generate ${numberOfCards || 10} flashcards about: "${topic}". Difficulty: ${difficulty || "intermediate"}.`;
+
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: prompt,
+      config: {
+        systemInstruction,
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            title: { type: Type.STRING },
+            flashcards: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  front: { type: Type.STRING },
+                  back: { type: Type.STRING }
+                },
+                required: ["front", "back"]
+              }
+            }
+          },
+          required: ["title", "flashcards"]
+        }
+      }
+    });
+
+    const jsonText = response.text || "";
+    const parsedData = JSON.parse(jsonText.trim());
+    res.json(parsedData);
+  } catch (error: any) {
+    res.status(500).json({ 
+      error: "Failed to generate flashcards", 
+      details: (error.message || String(error)).includes("429") || (error.message || String(error)).includes("quota") ? "API Key Quota Exceeded. Please check your billing details or upgrade to a paid tier." : error.message || String(error) 
+    });
+  }
+});
+
+// Setup dev server with Vite after API routes
+const startServer = async () => {
+  const httpServer = createServer(app);
+  
+  const wss = new WebSocketServer({ server: httpServer, path: "/live" });
+  wss.on("connection", async (clientWs) => {
+    try {
+      const ai = getAiClient();
+      const session = await ai.live.connect({
+        model: "gemini-3.1-flash-live-preview",
+        config: {
+          responseModalities: [Modality.AUDIO],
+          speechConfig: {
+            voiceConfig: { prebuiltVoiceConfig: { voiceName: "Zephyr" } },
+          },
+          systemInstruction: "You are illuminati AI, a helpful and knowledgeable study assistant. Speak concisely and clearly.",
+        },
+        callbacks: {
+          onmessage: (message: any) => {
+            const audio = message.serverContent?.modelTurn?.parts[0]?.inlineData?.data;
+            if (audio) clientWs.send(JSON.stringify({ audio }));
+            if (message.serverContent?.interrupted)
+              clientWs.send(JSON.stringify({ interrupted: true }));
+          },
+        },
+      });
+
+      clientWs.on("message", (data) => {
+        try {
+          const { audio } = JSON.parse(data.toString());
+          if (audio) {
+            session.sendRealtimeInput({
+              audio: { data: audio, mimeType: "audio/pcm;rate=16000" },
+            });
+          }
+        } catch(e) {}
+      });
+      
+      clientWs.on("close", () => {
+        try { session.close(); } catch(e) {}
+      });
+    } catch (e) {
+      clientWs.close();
+    }
+  });
+
+  if (process.env.NODE_ENV !== "production") {
+    console.log("🛠️ Starting Express server in Development Mode...");
+    const vite = await createViteServer({
+      server: { middlewareMode: true },
+      appType: "spa",
+    });
+    app.use(vite.middlewares);
+  } else {
+    console.log("🚀 Starting Express server in Production Mode...");
+    const distPath = path.join(process.cwd(), "dist");
+    app.use(express.static(distPath));
+    app.get("*", (req, res) => {
+      res.sendFile(path.join(distPath, "index.html"));
+    });
+  }
+
+  httpServer.listen(PORT, "0.0.0.0", () => {
+    console.log(`📡 Study Planner Server listening at http://0.0.0.0:${PORT}`);
+  });
+};
+
+startServer().catch((err) => {
+  console.log("Failed to start Study Planner Server:", err);
+});

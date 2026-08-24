@@ -1,0 +1,162 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: Arial, Helvetica, sans-serif;
+  --font-display: Arial, Helvetica, sans-serif;
+  --font-mono: Arial, monospace;
+}
+
+* {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Deep Oceanic & Edual Crimson Atmospheric Themes (Inspired by Reference Design) */
+:root {
+  --edual-bg-deep: #08080a;
+  --edual-card-bg: rgba(18, 18, 21, 0.88);
+  --edual-card-border: rgba(255, 255, 255, 0.08);
+  --edual-crimson-glow: rgba(225, 29, 72, 0.28);
+  --edual-red-accent: #e11d48;
+}
+
+body {
+  background-color: #08080a;
+  color: #f4f4f5;
+  min-height: 100vh;
+  background-image: 
+    radial-gradient(ellipse 70% 50% at 15% 25%, rgba(225, 29, 72, 0.24) 0%, rgba(180, 15, 45, 0.12) 40%, transparent 70%),
+    radial-gradient(ellipse 60% 45% at 85% 65%, rgba(220, 38, 38, 0.16) 0%, transparent 65%),
+    radial-gradient(ellipse 100% 60% at 50% 100%, rgba(30, 10, 15, 0.3) 0%, transparent 70%),
+    linear-gradient(180deg, #08080a 0%, #0d0d10 40%, #08080a 100%);
+  background-attachment: fixed;
+}
+
+.edual-crimson-bg,
+.ocean-atmosphere-bg {
+  background-color: #08080a;
+  background-image: 
+    radial-gradient(ellipse 75% 55% at 15% 20%, rgba(225, 29, 72, 0.26) 0%, rgba(180, 15, 45, 0.12) 40%, transparent 70%),
+    radial-gradient(ellipse 65% 50% at 90% 60%, rgba(220, 38, 38, 0.18) 0%, transparent 65%),
+    radial-gradient(ellipse 100% 60% at 50% 100%, rgba(30, 10, 15, 0.35) 0%, transparent 70%),
+    linear-gradient(180deg, #08080a 0%, #0c0c0f 40%, #08080a 100%);
+  background-attachment: fixed;
+}
+
+/* Eye-comfort Focus Mode Variables & High-Contrast overrides */
+:root.theme-focus {
+  --focus-bg-root: #0e0d0b;
+  --focus-bg-card: #181512;
+  --focus-bg-panel: #201c18;
+  --focus-border: #3d352b;
+  --focus-accent: #f59e0b;
+  --focus-accent-hover: #d97706;
+  --focus-text-primary: #fffbeb;
+  --focus-text-secondary: #fde68a;
+  --focus-text-muted: #d6d3d1;
+}
+
+.theme-focus {
+  color-scheme: dark;
+}
+
+.theme-focus body {
+  background-color: #0e0d0b !important;
+  color: #fffbeb !important;
+}
+
+/* High-contrast focus mode specific container styling */
+.theme-focus .bg-slate-900,
+.theme-focus .bg-slate-950 {
+  background-color: #0e0d0b !important;
+}
+
+.theme-focus .bg-slate-800,
+.theme-focus .bg-slate-800\/90,
+.theme-focus .bg-slate-800\/80,
+.theme-focus .bg-slate-800\/60 {
+  background-color: #181512 !important;
+  border-color: #382e25 !important;
+}
+
+.theme-focus .bg-slate-700,
+.theme-focus .bg-slate-700\/50,
+.theme-focus .bg-slate-700\/40 {
+  background-color: #241f1a !important;
+  border-color: #4a3e32 !important;
+}
+
+.theme-focus .border-slate-800,
+.theme-focus .border-slate-700 {
+  border-color: #382e25 !important;
+}
+
+.theme-focus .text-slate-400,
+.theme-focus .text-slate-500 {
+  color: #d6d3d1 !important;
+}
+
+.theme-focus .text-slate-300,
+.theme-focus .text-slate-200 {
+  color: #fef3c7 !important;
+}
+
+.theme-focus .text-white {
+  color: #fffbeb !important;
+}
+
+/* Warm eye-soothing focus mode active elements */
+.theme-focus .bg-blue-600,
+.theme-focus .bg-indigo-600 {
+  background-color: #d97706 !important;
+}
+
+.theme-focus .hover\:bg-blue-700:hover,
+.theme-focus .hover\:bg-indigo-500:hover {
+  background-color: #b45309 !important;
+}
+
+@layer utilities {
+  .checkerboard-bg {
+    background-image: linear-gradient(45deg, #e5e7eb 25%, transparent 25%), linear-gradient(-45deg, #e5e7eb 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #e5e7eb 75%), linear-gradient(-45deg, transparent 75%, #e5e7eb 75%);
+    background-size: 20px 20px;
+    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+  }
+  
+  .dark .checkerboard-bg {
+    background-image: linear-gradient(45deg, #374151 25%, transparent 25%), linear-gradient(-45deg, #374151 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #374151 75%), linear-gradient(-45deg, transparent 75%, #374151 75%);
+  }
+
+  .perspective-1000 {
+    perspective: 1000px;
+  }
+  
+  .transform-style-3d {
+    transform-style: preserve-3d;
+  }
+  
+  .backface-hidden {
+    backface-visibility: hidden;
+  }
+  
+  .rotate-y-180 {
+    transform: rotateY(180deg);
+  }
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 20px;
+}
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #475569;
+}
+.theme-focus .custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #78350f;
+}
+
