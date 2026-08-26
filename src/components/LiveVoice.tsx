@@ -145,7 +145,7 @@ export default function LiveVoice() {
       <div className="flex items-center justify-between mb-4">
         <div>
           <h2 className="text-lg font-bold font-display text-slate-800 dark:text-slate-100">Voice Conversation</h2>
-          <p className="text-[11px] text-slate-500">Talk to Luminati AI directly</p>
+          <p className="text-[11px] text-slate-500">Talk to LumoraAI directly</p>
         </div>
         <button
           onClick={toggleConnection}

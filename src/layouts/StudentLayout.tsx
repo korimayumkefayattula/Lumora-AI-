@@ -37,7 +37,7 @@ export default function StudentLayout() {
       theme === 'focus'
         ? 'theme-focus bg-[#0e0d0b] text-[#fffbeb]'
         : theme === 'dark'
-        ? 'dark edual-crimson-bg text-slate-100'
+        ? 'dark lumora-crimson-bg text-slate-100'
         : 'light bg-slate-100/70 text-slate-900'
     } flex flex-col font-sans transition-colors duration-200`}>
       

@@ -11,7 +11,7 @@ export default function AdminPanel() {
             <div className="flex items-center gap-2 text-emerald-500 font-bold tracking-widest uppercase text-xs mb-2">
               <Shield className="w-4 h-4" /> System Administrator
             </div>
-            <h1 className="text-2xl font-bold text-white">LuminatiAI Control Center</h1>
+            <h1 className="text-2xl font-bold text-white">LumoraAI Control Center</h1>
           </div>
           <div className="flex items-center gap-4">
              <div className="flex items-center gap-2 px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded text-xs font-bold uppercase tracking-wider">

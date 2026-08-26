@@ -1,6 +1,6 @@
 {
-  "name": "Lumora AI",
-  "description": "Lumora AI is a next-generation AI-powered EdTech platform offering personalized AI tutoring, doubt resolution, interactive study planning, flashcards, quizzes, and learning analytics.",
+  "name": "LumoraAI",
+  "description": "LumoraAI is a next-generation AI-powered EdTech platform offering personalized AI tutoring, doubt resolution, interactive study planning, flashcards, quizzes, and learning analytics.",
   "requestFramePermissions": [
     "microphone"
   ],

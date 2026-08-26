@@ -1,167 +1,213 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Bot, User, Mic, Send, Sparkles, RefreshCw } from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
-import { VoiceTutorModal } from '../components/voice/VoiceTutorModal';
-import { VoiceTutorButton } from '../components/voice/VoiceTutorButton';
+import React, { useState } from 'react';
+import { 
+  ChatGPTConversationView, 
+  ChatMessage 
+} from '../components/chat/ChatGPTConversationView';
+import { 
+  BookOpen, 
+  GraduationCap, 
+  Lightbulb, 
+  Target, 
+  Sparkles,
+  Layers,
+  HelpCircle,
+  X
+} from 'lucide-react';
 
-interface ChatMessage {
-  id: string;
-  sender: "user" | "ai";
-  text: string;
-}
+const TUTOR_MODES = [
+  { id: 'General', name: 'General Study Mentor' },
+  { id: 'Socratic', name: 'Socratic Questioning' },
+  { id: 'ExamRevision', name: 'Exam Prep & High Yield' },
+  { id: 'ConceptExplainer', name: 'ELI5 & Visual Analogy' },
+  { id: 'Motivation', name: 'Focus & Study Strategy' },
+];
+
+const SUGGESTED_MENTOR_PROMPTS = [
+  {
+    topic: 'Physics',
+    title: 'Explain Quantum Entanglement simply',
+    query: 'Explain quantum entanglement and Einstein-Podolsky-Rosen paradox using a simple everyday analogy with a pair of shoes in boxes.'
+  },
+  {
+    topic: 'Study Strategy',
+    title: 'How to use Feynman Technique for difficult chapters?',
+    query: 'Guide me on how to apply the 4-step Feynman Technique to master complex organic chemistry reaction mechanisms.'
+  },
+  {
+    topic: 'Mathematics',
+    title: 'Intuitive meaning of Eigenvalues & Eigenvectors',
+    query: 'What is the physical geometric intuition behind eigenvalues and eigenvectors in linear algebra? Why do axes not rotate?'
+  },
+  {
+    topic: 'Biology',
+    title: 'How CRISPR Cas-9 gene editing works',
+    query: 'Explain how CRISPR Cas9 acts as molecular scissors to cut and modify specific DNA sequences with guide RNA.'
+  }
+];
 
 export default function AITutor() {
-  const [messages, setMessages] = useState<ChatMessage[]>([{
-    id: "init",
-    sender: "ai",
-    text: "Hi there! I'm your Luminati AI Mentor. How can I help you study today?"
-  }]);
-  const [input, setInput] = useState("");
+  const [selectedMode, setSelectedMode] = useState("General");
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    {
+      id: 'welcome',
+      sender: 'ai',
+      text: `Hello! I'm your **Lumora AI Study Mentor & Pedagogical Guide** [cite: Lumora Core].
 
-  const handleSendText = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim() || loading) return;
-    
-    const text = input;
-    setInput("");
-    setMessages(prev => [...prev, { id: Math.random().toString(), sender: "user", text }]);
+• **Socratic Concept Exploration**: Ask any concept and we'll break it down step-by-step with real-world analogies [cite: MIT OpenCourseWare].
+• **High-Yield Exam Strategy**: Master tricky topics, memory mnemonics, and active recall frameworks [cite: Khan Academy].
+• **Two-Way Voice Coaching**: Tap the blue waveform button anytime to speak naturally in voice mode.
+
+If you're asking ↳ how quantum entanglement works / how to design an effective study schedule, I can guide you through it.`,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    }
+  ]);
+
+  const handleSendMessage = async (
+    text: string, 
+    attachment?: { data: string; mimeType: string; name: string; preview: string }
+  ) => {
+    const q = text.trim();
+    if (!q && !attachment) return;
+
+    const userMsg: ChatMessage = {
+      id: Date.now().toString(),
+      sender: 'user',
+      text: q || (attachment ? `Analyze this document: ${attachment.name}` : ""),
+      attachmentPreview: attachment?.preview,
+      attachmentName: attachment?.name,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    };
+
+    setMessages(prev => [...prev, userMsg]);
     setLoading(true);
-    
+
     try {
       const res = await fetch("/api/chat-buddy", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: text })
+        body: JSON.stringify({ 
+          question: q,
+          mode: selectedMode,
+          attachment: attachment ? { data: attachment.data, mimeType: attachment.mimeType } : undefined
+        })
       });
+
       const data = await res.json();
-      setMessages(prev => [...prev, { id: Math.random().toString(), sender: "ai", text: data.answer || "I'm here to help!" }]);
-    } catch(err) {
-      console.error(err);
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to get AI mentor response");
+      }
+
+      const aiMsg: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        sender: 'ai',
+        text: data.answer || "I'm here to help you understand every step.",
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+      setMessages(prev => [...prev, aiMsg]);
+    } catch (err: any) {
+      console.error("AI Tutor Chat Error:", err);
+      setMessages(prev => [
+        ...prev,
+        {
+          id: (Date.now() + 1).toString(),
+          sender: 'ai',
+          text: `⚠️ **AI Mentor connection error:** ${err.message || 'Please try again.'}`,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        }
+      ]);
     } finally {
       setLoading(false);
     }
   };
 
-  return (
-    <div className="h-full bg-slate-50 dark:bg-slate-900 flex flex-col items-center p-4 lg:p-6 overflow-hidden">
-      
-      <div className="w-full max-w-4xl bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col h-full overflow-hidden relative">
-        
-        {/* Voice Banner Prompt */}
-        <div className="p-4 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shrink-0">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white border border-white/20">
-                <Mic className="w-5 h-5 text-cyan-300 animate-pulse" />
-              </div>
-              <div>
-                <h3 className="font-bold text-sm text-white">AI Voice Tutor Mode Available</h3>
-                <p className="text-[11px] text-blue-100 font-medium">Have a two-way spoken conversation in English, Hindi, or Hinglish</p>
-              </div>
-            </div>
-            <VoiceTutorButton onClick={() => setIsVoiceModalOpen(true)} variant="prominent" label="Launch Voice Tutor" />
-          </div>
-        </div>
+  const handleClearChat = () => {
+    setMessages([]);
+  };
 
-        {/* Header */}
-        <div className="h-14 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between px-6 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md z-10 shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-blue-600 dark:text-blue-400">
-              <Bot className="w-4 h-4" />
-            </div>
-            <div>
-              <h2 className="font-bold text-slate-800 dark:text-white font-display text-xs leading-tight">AI Study Mentor Chat</h2>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <button 
-              onClick={() => setMessages([{ id: "init", sender: "ai", text: "Chat cleared. What's next?" }])}
-              className="w-8 h-8 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-center text-slate-400 transition-colors"
-              title="Clear chat"
-            >
-              <RefreshCw className="w-4 h-4" />
-            </button>
-          </div>
+  // Drawer Content for AI Tutor
+  const drawerContent = (
+    <div className="h-full flex flex-col p-4 space-y-4 overflow-y-auto custom-scrollbar">
+      <div className="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-zinc-800">
+        <div className="flex items-center gap-2">
+          <GraduationCap className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+          <h3 className="font-bold text-xs uppercase tracking-wider text-zinc-700 dark:text-zinc-300">
+            Mentor Settings
+          </h3>
         </div>
-
-        {/* Chat Area */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar bg-slate-50/50 dark:bg-slate-900/30">
-          {messages.map((msg) => (
-            <div key={msg.id} className={`flex gap-4 max-w-[85%] ${msg.sender === "user" ? "ml-auto flex-row-reverse" : ""}`}>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${msg.sender === "user" ? "bg-slate-800 dark:bg-slate-700 text-white" : "bg-gradient-to-tr from-blue-600 to-indigo-500 text-white shadow-sm"}`}>
-                {msg.sender === "user" ? <User className="w-4 h-4" /> : <Sparkles className="w-4 h-4" />}
-              </div>
-              <div className={`rounded-2xl p-4 shadow-sm ${msg.sender === "user" ? "bg-slate-800 dark:bg-slate-700 text-white rounded-tr-sm" : "bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-800 dark:text-slate-200 rounded-tl-sm"}`}>
-                 {msg.sender === "user" ? (
-                   <p className="text-sm leading-relaxed">{msg.text}</p>
-                 ) : (
-                   <div className="markdown-body prose dark:prose-invert max-w-none text-sm prose-p:leading-relaxed prose-pre:bg-slate-900 prose-pre:text-slate-100 prose-pre:p-4 prose-pre:rounded-xl">
-                     <ReactMarkdown>{msg.text}</ReactMarkdown>
-                   </div>
-                 )}
-              </div>
-            </div>
-          ))}
-          {loading && (
-             <div className="flex gap-4 max-w-[85%]">
-              <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 bg-gradient-to-tr from-blue-600 to-indigo-500 text-white shadow-sm">
-                <Sparkles className="w-4 h-4" />
-              </div>
-              <div className="bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl rounded-tl-sm p-4 shadow-sm flex items-center gap-2">
-                 <div className="flex gap-1">
-                   <div className="w-2 h-2 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                   <div className="w-2 h-2 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                   <div className="w-2 h-2 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: '300ms' }}></div>
-                 </div>
-              </div>
-            </div>
-          )}
-          <div ref={messagesEndRef} />
-        </div>
-
-        {/* Input Area */}
-        <div className="p-4 bg-white dark:bg-slate-800 border-t border-slate-100 dark:border-slate-700 shrink-0">
-          <form onSubmit={handleSendText} className="flex items-center gap-3">
-            <button 
-              type="button"
-              onClick={() => setIsVoiceModalOpen(true)}
-              className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 transition-all bg-gradient-to-tr from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/20 hover:scale-105"
-              title="Open AI Voice Tutor"
-            >
-              <Mic className="w-5 h-5 text-cyan-300 animate-pulse" />
-            </button>
-            <div className="flex-1 relative">
-              <input 
-                type="text"
-                value={input}
-                onChange={e => setInput(e.target.value)}
-                placeholder="Ask me anything..."
-                className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl py-3.5 pl-4 pr-12 outline-none focus:border-blue-500 transition-colors text-slate-700 dark:text-slate-200 text-xs font-medium"
-              />
-              <button 
-                type="submit"
-                disabled={!input.trim() || loading}
-                className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 bg-blue-600 disabled:bg-blue-300 hover:bg-blue-700 text-white rounded-lg flex items-center justify-center transition-colors shadow-sm"
-              >
-                <Send className="w-4 h-4" />
-              </button>
-            </div>
-          </form>
-        </div>
-        
+        <button 
+          onClick={() => setIsDrawerOpen(false)} 
+          className="p-1 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-400"
+        >
+          <X className="w-4 h-4" />
+        </button>
       </div>
 
-      <VoiceTutorModal
-        isOpen={isVoiceModalOpen}
-        onClose={() => setIsVoiceModalOpen(false)}
-      />
+      {/* Teaching Style / Mode */}
+      <div className="space-y-1.5">
+        <label className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider block">
+          Pedagogical Teaching Style
+        </label>
+        <div className="space-y-1">
+          {TUTOR_MODES.map((mode) => (
+            <button
+              key={mode.id}
+              onClick={() => setSelectedMode(mode.id)}
+              className={`w-full p-2.5 rounded-xl text-left text-xs font-semibold flex items-center justify-between border transition-all ${
+                selectedMode === mode.id
+                  ? 'bg-blue-50 dark:bg-blue-950/40 border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-300'
+                  : 'bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50'
+              }`}
+            >
+              <span>{mode.name}</span>
+              {selectedMode === mode.id && <span className="w-2 h-2 rounded-full bg-blue-600" />}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Exemplar Discussion Prompts */}
+      <div className="space-y-2 pt-2 border-t border-zinc-200 dark:border-zinc-800">
+        <label className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider block">
+          Topic Explorations
+        </label>
+        <div className="space-y-1.5">
+          {SUGGESTED_MENTOR_PROMPTS.map((item, idx) => (
+            <button
+              key={idx}
+              onClick={() => {
+                handleSendMessage(item.query);
+                setIsDrawerOpen(false);
+              }}
+              className="w-full text-left p-2.5 rounded-xl bg-white dark:bg-zinc-800 hover:bg-blue-50 dark:hover:bg-blue-950/30 border border-zinc-200 dark:border-zinc-700/80 hover:border-blue-300 transition-all group"
+            >
+              <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 block">{item.topic}</span>
+              <span className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 group-hover:text-blue-600 line-clamp-1">{item.title}</span>
+            </button>
+          ))}
+        </div>
+      </div>
     </div>
+  );
+
+  return (
+    <ChatGPTConversationView
+      title="AI Study Mentor"
+      badgeLabel={`AI Tutor • ${TUTOR_MODES.find(m => m.id === selectedMode)?.name || 'General'}`}
+      placeholder="Reply to ChatGPT"
+      messages={messages}
+      loading={loading}
+      onSendMessage={handleSendMessage}
+      onClearChat={handleClearChat}
+      subjectOptions={TUTOR_MODES}
+      selectedSubject={selectedMode}
+      onSelectSubject={setSelectedMode}
+      drawerContent={drawerContent}
+      isDrawerOpen={isDrawerOpen}
+      onToggleDrawer={() => setIsDrawerOpen(!isDrawerOpen)}
+      voiceSubjectContext={`Teaching Mode: ${selectedMode}`}
+    />
   );
 }

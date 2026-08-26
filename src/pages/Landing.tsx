@@ -269,20 +269,20 @@ export default function Landing() {
         <div className="absolute top-2/3 left-10 w-[500px] h-[500px] bg-rose-950/15 rounded-full blur-[140px]" />
       </div>
 
-      {/* Header / Navbar Matching Edual Reference Layout */}
+      {/* Header / Navbar Matching LumoraAI Layout */}
       <header className="fixed top-0 inset-x-0 bg-[#020b12]/85 backdrop-blur-xl z-50 border-b border-cyan-950/60 shadow-2xl">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-3">
           
-          {/* Brand Logo with Edual-inspired Red Accent */}
+          {/* Brand Logo */}
           <div className="flex items-center gap-2 shrink-0">
             <Link to="/" className="flex items-center gap-1.5 group">
               <div className="flex items-center gap-0.5">
-                <span className="w-2 h-4.5 bg-rose-600 rounded-xs transform -skew-x-12"></span>
-                <span className="w-2 h-4.5 bg-rose-500 rounded-xs transform -skew-x-12"></span>
-                <span className="w-2 h-4.5 bg-rose-400 rounded-xs transform -skew-x-12"></span>
+                <span className="w-2 h-4.5 bg-blue-600 rounded-xs transform -skew-x-12"></span>
+                <span className="w-2 h-4.5 bg-blue-500 rounded-xs transform -skew-x-12"></span>
+                <span className="w-2 h-4.5 bg-blue-400 rounded-xs transform -skew-x-12"></span>
               </div>
-              <span className="text-base font-black tracking-wider text-white font-mono uppercase group-hover:text-rose-400 transition-colors">
-                EDUAL<span className="text-rose-500">.AI</span>
+              <span className="text-base font-black tracking-wider text-white font-mono uppercase group-hover:text-blue-400 transition-colors">
+                LUMORA<span className="text-blue-500">AI</span>
               </span>
             </Link>
             <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-cyan-950/80 border border-cyan-700/40 text-cyan-300 text-[9px] font-bold tracking-wide">
@@ -441,8 +441,8 @@ export default function Landing() {
               <div className="pt-6 border-t border-slate-800/80">
                 <div className="flex flex-wrap items-center gap-6 sm:gap-8 opacity-70">
                   <div className="flex items-center gap-1.5 text-xs font-black tracking-widest uppercase font-mono text-slate-300">
-                    <Sparkles className="w-4 h-4 text-rose-500" />
-                    <span>EDUAL</span>
+                    <Sparkles className="w-4 h-4 text-blue-500" />
+                    <span>LUMORAAI</span>
                   </div>
                   <div className="flex items-center gap-1.5 text-xs font-black tracking-widest uppercase font-mono text-slate-300">
                     <Cpu className="w-4 h-4 text-cyan-400" />
@@ -454,7 +454,7 @@ export default function Landing() {
                   </div>
                   <div className="flex items-center gap-1.5 text-xs font-black tracking-widest uppercase font-mono text-slate-300">
                     <Brain className="w-4 h-4 text-purple-400" />
-                    <span>LUMORA</span>
+                    <span>STUDY OS</span>
                   </div>
                 </div>
               </div>
@@ -516,7 +516,7 @@ export default function Landing() {
                         AI
                       </div>
                       <div>
-                        <div className="text-xs font-bold text-white">LuminatiAI Master Tutor</div>
+                        <div className="text-xs font-bold text-white">LumoraAI Master Tutor</div>
                         <div className="text-[10px] text-emerald-400">Online • Ready to solve doubts</div>
                       </div>
                     </div>
@@ -932,7 +932,7 @@ export default function Landing() {
                       setTimeout(() => {
                         setDemoResponse(
                           `✨ **${preset}**:\n\n` +
-                          `• **Core Idea**: Edual breaks complex syllabus topics into intuitive mental models, high-school textbook rigor, and exam scoring strategies.\n` +
+                          `• **Core Idea**: LumoraAI breaks complex syllabus topics into intuitive mental models, high-school textbook rigor, and exam scoring strategies.\n` +
                           `• **Interactive Graph**: Connected to 8 prerequisite and derivative concepts.\n` +
                           `• **Exam Ready**: Includes common misconceptions, key formulas, and self-check quizzes.`
                         );
@@ -1006,17 +1006,17 @@ export default function Landing() {
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1">
-              <span className="w-2 h-5 bg-rose-600 rounded-xs transform -skew-x-12"></span>
-              <span className="w-2 h-5 bg-rose-500 rounded-xs transform -skew-x-12"></span>
-              <span className="w-2 h-5 bg-rose-400 rounded-xs transform -skew-x-12"></span>
+              <span className="w-2 h-5 bg-blue-600 rounded-xs transform -skew-x-12"></span>
+              <span className="w-2 h-5 bg-blue-500 rounded-xs transform -skew-x-12"></span>
+              <span className="w-2 h-5 bg-blue-400 rounded-xs transform -skew-x-12"></span>
             </div>
             <span className="text-base font-black tracking-wider text-white font-mono uppercase">
-              EDUAL<span className="text-rose-500">.AI</span>
+              LUMORA<span className="text-blue-500">AI</span>
             </span>
           </div>
 
           <p className="text-slate-500 font-medium text-xs text-center md:text-left">
-            © 2026 Edual / Lumora AI Inc. All rights reserved. Next-generation AI learning workspace.
+            © 2026 LumoraAI Inc. All rights reserved. Next-generation AI learning workspace.
           </p>
 
           <div className="flex flex-wrap justify-center gap-6 text-xs font-semibold text-slate-400">

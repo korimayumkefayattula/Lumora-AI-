@@ -453,7 +453,7 @@ export default function StudentDashboard() {
   };
 
     return (
-    <div className="h-full edual-crimson-bg bg-[#08080a] text-slate-100 overflow-y-auto font-sans transition-colors duration-300">
+    <div className="h-full lumora-crimson-bg bg-[#08080a] text-slate-100 overflow-y-auto font-sans transition-colors duration-300">
       {/* Dynamic Success notifications banner */}
       {successBanner && (
         <div id="success-floater-banner" className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-[#141418] border border-rose-900/60 text-white text-xs font-bold py-3.5 px-6 rounded-2xl shadow-2xl z-50 flex items-center gap-2 animate-bounce">
@@ -513,7 +513,7 @@ export default function StudentDashboard() {
           {/* OmniRoute Status & Control Banner */}
           <OmniRouteBanner />
 
-          {/* Welcome Banner - Edual Crimson Dark Gradient */}
+          {/* Welcome Banner - Lumora Crimson Dark Gradient */}
           <div className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-[#1c080d] via-[#12080a] to-[#0a0a0d] border border-rose-900/40 p-8 lg:p-10 text-white shadow-2xl mb-8">
             <div className="relative z-10 grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
               <div className="md:col-span-7 lg:col-span-8">
@@ -709,7 +709,7 @@ export default function StudentDashboard() {
           
           <footer className="mt-12 py-6 text-center select-none opacity-50 pb-32">
             <p className="text-[11px] font-medium text-slate-500 capitalize">
-              Luminati AI • Structuring focus intervals and active recall map templates
+              LumoraAI • Structuring focus intervals and active recall map templates
             </p>
           </footer>
               </main>

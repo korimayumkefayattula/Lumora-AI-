@@ -39,7 +39,7 @@ export default function InfographicGenerator() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `luminati_${topic.replace(/\s+/g, '_')}_${type.replace(/\s+/g, '_')}.svg`;
+    a.download = `lumora_${topic.replace(/\s+/g, '_')}_${type.replace(/\s+/g, '_')}.svg`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);

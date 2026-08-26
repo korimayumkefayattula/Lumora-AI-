@@ -25,7 +25,7 @@ export function DailyQuote() {
       </div>
       <div>
         <p className="text-sm font-medium text-zinc-200 italic">"{quote}"</p>
-        <p className="text-[10px] text-rose-400/90 font-bold tracking-wider uppercase mt-1">LuminatiAI Mentor</p>
+        <p className="text-[10px] text-rose-400/90 font-bold tracking-wider uppercase mt-1">LumoraAI Mentor</p>
       </div>
     </div>
   );

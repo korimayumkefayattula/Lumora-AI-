@@ -93,14 +93,14 @@ export default function AIPlanner({ subjects, onAddTasks, onAddMockSubject }: AI
       });
 
       if (!response.ok) {
-        throw new Error("Luminati AI was unable to generate your study plan.");
+        throw new Error("LumoraAI was unable to generate your study plan.");
       }
 
       const data = await response.json();
       setPlannerResult(data);
     } catch (err: any) {
       console.error(err);
-      setErrorMsg(err.message || "An unexpected error occurred while communicating with Luminati AI.");
+      setErrorMsg(err.message || "An unexpected error occurred while communicating with LumoraAI.");
     } finally {
       clearInterval(stepInterval);
       setLoading(false);
@@ -139,7 +139,7 @@ export default function AIPlanner({ subjects, onAddTasks, onAddMockSubject }: AI
         </div>
         <div>
           <h2 className="text-lg font-bold font-display text-slate-800 dark:text-slate-100">
-            Luminati AI Planner
+            LumoraAI Planner
           </h2>
           <p className="text-xs text-slate-500">
             Generate milestone templates structured for active recall
@@ -376,7 +376,7 @@ export default function AIPlanner({ subjects, onAddTasks, onAddMockSubject }: AI
                 No active schedule template compiled
               </h3>
               <p className="text-xs text-slate-400 mt-1 max-w-[280px] mx-auto leading-relaxed">
-                Enter your study target parameters on the left, and Luminati AI will structure a personalized chronological roadmap.
+                Enter your study target parameters on the left, and LumoraAI will structure a personalized chronological roadmap.
               </p>
             </div>
           )}

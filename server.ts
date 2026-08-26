@@ -44,6 +44,42 @@ const getAiClient = (): GoogleGenAI => {
   });
 };
 
+// Resilient Gemini Content Generator with multi-tier model fallback & retry
+async function generateContentWithResilience(
+  ai: GoogleGenAI,
+  options: {
+    model?: string;
+    contents: any;
+    config?: any;
+    fallbackModels?: string[];
+  }
+) {
+  const primaryModel = options.model || "gemini-3.7-flash";
+  const fallbackList = options.fallbackModels || ["gemini-3.7-flash", "gemini-flash-latest", "gemini-3.1-flash-lite"];
+  const modelsToTry = [primaryModel, ...fallbackList.filter(m => m !== primaryModel)];
+
+  let lastError: any = null;
+  for (let i = 0; i < modelsToTry.length; i++) {
+    const currentModel = modelsToTry[i];
+    try {
+      const response = await ai.models.generateContent({
+        model: currentModel,
+        contents: options.contents,
+        config: options.config,
+      });
+      return response;
+    } catch (err: any) {
+      lastError = err;
+      const errMsg = err?.message || String(err);
+      console.warn(`[Gemini Request Attempt ${i + 1}/${modelsToTry.length} - ${currentModel}]: ${errMsg}`);
+      if (i < modelsToTry.length - 1) {
+        await new Promise(r => setTimeout(r, 400));
+      }
+    }
+  }
+  throw lastError;
+}
+
 // OmniRoute Configuration & Utilities
 const OMNIROUTE_DEFAULT_URL = process.env.OMNIROUTE_URL || "http://localhost:20128";
 
@@ -181,8 +217,8 @@ Deconstruct this study goal into a practical, highly focused list of study tasks
     }
 
     const ai = getAiClient();
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+    const response = await generateContentWithResilience(ai, {
+      model: "gemini-3.7-flash",
       contents: prompt,
       config: {
         systemInstruction,
@@ -249,7 +285,7 @@ app.post("/api/chat-buddy", async (req, res) => {
       return;
     }
 
-    let systemInstruction = `You are LuminatiAI Mentor - a student's Personal Teacher, Daily Coach, and Best Friend.
+    let systemInstruction = `You are LumoraAI Mentor - a student's Personal Teacher, Daily Coach, and Best Friend.
 You are warm, funny, intelligent, optimistic, and encouraging. Never judgmental. Never boring.
 Your goal is to build confidence, reduce exam stress, encourage consistency, and make learning feel supported and less lonely.
 
@@ -299,8 +335,8 @@ Use markdown for formatting. Be concise but caring.`;
     }
     contents.push(question);
 
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+    const response = await generateContentWithResilience(ai, {
+      model: "gemini-3.7-flash",
       contents: contents,
       config: {
         systemInstruction,
@@ -362,8 +398,8 @@ app.post("/api/voice-tutor/chat", async (req, res) => {
       ? `Previous Conversation:\n${formattedHistory}\n\nStudent Question: "${question}"`
       : `Student Question: "${question}"`;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+    const response = await generateContentWithResilience(ai, {
+      model: "gemini-3.7-flash",
       contents: prompt,
       config: {
         systemInstruction,
@@ -847,8 +883,8 @@ app.post("/api/generate-quiz", async (req, res) => {
     const systemInstruction = "You are an expert educator. Create a multiple-choice quiz that tests deep understanding, not just memorization.";
     const prompt = `Generate a quiz about: "${topic}". Difficulty: ${difficulty || "intermediate"}. Number of questions: ${numberOfQuestions || 5}.`;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+    const response = await generateContentWithResilience(ai, {
+      model: "gemini-3.7-flash",
       contents: prompt,
       config: {
         systemInstruction,
@@ -952,8 +988,8 @@ app.post("/api/ai-summarize", async (req, res) => {
     if (content) promptText += `Source Content / Notes:\n"""\n${content}\n"""\n`;
     parts.push({ text: promptText });
 
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+    const response = await generateContentWithResilience(ai, {
+      model: "gemini-3.7-flash",
       contents: [{ role: 'user', parts }],
       config: {
         systemInstruction,
@@ -1063,8 +1099,8 @@ app.post("/api/solve-doubt", async (req, res) => {
     const promptText = `Student Doubt / Question:\n"${query || 'Please solve and explain the question in the attached file step-by-step.'}"\n\nSubject: ${subject || 'Auto-detect'}\nGrade Level: ${targetLevel || 'High School / Exam Prep'}`;
     parts.push({ text: promptText });
 
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+    const response = await generateContentWithResilience(ai, {
+      model: "gemini-3.7-flash",
       contents: [{ role: 'user', parts }],
       config: {
         systemInstruction,
@@ -1082,9 +1118,20 @@ app.post("/api/solve-doubt", async (req, res) => {
     });
   } catch (error: any) {
     console.error("Doubt Solver Error:", error);
+    const errMsg = error?.message || String(error);
+    const isQuota = errMsg.includes("429") || errMsg.includes("quota");
+    const isUnavailable = errMsg.includes("503") || errMsg.includes("UNAVAILABLE") || errMsg.includes("high demand");
+    
+    let friendlyDetail = errMsg;
+    if (isQuota) {
+      friendlyDetail = "API Key Quota Exceeded. Please check billing or upgrade.";
+    } else if (isUnavailable) {
+      friendlyDetail = "Model is currently experiencing high demand. Please try again shortly.";
+    }
+
     res.status(500).json({ 
       error: "Failed to solve doubt", 
-      details: (error.message || String(error)).includes("429") || (error.message || String(error)).includes("quota") ? "API Key Quota Exceeded. Please check billing or upgrade." : error.message || String(error) 
+      details: friendlyDetail
     });
   }
 });
@@ -1112,8 +1159,8 @@ app.post("/api/notebook-lm", async (req, res) => {
       { text: `\n\nStudent Question: ${query}` }
     ];
 
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+    const response = await generateContentWithResilience(ai, {
+      model: "gemini-3.7-flash",
       contents: [{ role: 'user', parts }]
     });
 
@@ -1139,8 +1186,8 @@ app.post("/api/analyze-document", async (req, res) => {
     const prompt = promptText || "Analyze this document and provide a comprehensive summary of its contents.";
     
     // Some formats like PDF might be better with gemini-2.5-pro, but flash is fast
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+    const response = await generateContentWithResilience(ai, {
+      model: "gemini-3.7-flash",
       contents: [
         {
           role: 'user',
@@ -1179,8 +1226,8 @@ app.post("/api/generate-flashcards", async (req, res) => {
     const systemInstruction = "You are an expert tutor. Create a set of flashcards for memorization. Each card must have a clear 'front' (question/concept) and 'back' (answer/definition).";
     const prompt = `Generate ${numberOfCards || 10} flashcards about: "${topic}". Difficulty: ${difficulty || "intermediate"}.`;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+    const response = await generateContentWithResilience(ai, {
+      model: "gemini-3.7-flash",
       contents: prompt,
       config: {
         systemInstruction,
@@ -1233,8 +1280,8 @@ app.post("/api/generate-infographic", async (req, res) => {
     
     const prompt = `Generate a highly visual, professional ${type || 'mind map'} about: "${topic}". Make it structured with nodes and connecting lines. Ensure the viewBox is large enough (e.g., viewBox="0 0 800 600") and elements are well-spaced.`;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+    const response = await generateContentWithResilience(ai, {
+      model: "gemini-3.7-flash",
       contents: prompt,
       config: {
         systemInstruction,
@@ -1356,8 +1403,8 @@ app.post("/api/explain-simply", async (req, res) => {
       `${history && history.length > 0 ? `PREVIOUS CONVERSATION HISTORY:\n${JSON.stringify(history)}\n\n` : ''}` +
       `Explain this text now. Ensure you identify 2-5 difficult terminology words in difficultTerms array, provide a concise key idea, an easy example, a visual flowchart string if relevant, and 3 helpful follow-up questions.`;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+    const response = await generateContentWithResilience(ai, {
+      model: "gemini-3.7-flash",
       contents: prompt,
       config: {
         systemInstruction,
@@ -1436,8 +1483,8 @@ app.post("/api/explain-simply/flashcards", async (req, res) => {
     const ai = getAiClient();
     const prompt = `Generate 4-6 high-quality educational flashcards based on this content:\nOriginal Text: "${text || ''}"\nExplanation: "${explanation || ''}"`;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+    const response = await generateContentWithResilience(ai, {
+      model: "gemini-3.7-flash",
       contents: prompt,
       config: {
         systemInstruction: "You are an expert educational study assistant. Create concise, clear flashcards with a clear Question on front and crisp Answer on back.",
@@ -1482,8 +1529,8 @@ app.post("/api/explain-simply/quiz", async (req, res) => {
     const ai = getAiClient();
     const prompt = `Generate a ${count}-question multiple choice quiz based strictly on this educational content:\nOriginal Text: "${text || ''}"\nExplanation: "${explanation || ''}"`;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+    const response = await generateContentWithResilience(ai, {
+      model: "gemini-3.7-flash",
       contents: prompt,
       config: {
         systemInstruction: "You are an expert exam setter. Create multiple choice questions that test conceptual understanding.",
@@ -1537,7 +1584,7 @@ const startServer = async () => {
           speechConfig: {
             voiceConfig: { prebuiltVoiceConfig: { voiceName: "Zephyr" } },
           },
-          systemInstruction: "You are LuminatiAI Mentor, a warm, funny, intelligent, and encouraging personal coach and best friend. Speak concisely and clearly.",
+          systemInstruction: "You are LumoraAI Mentor, a warm, funny, intelligent, and encouraging personal coach and best friend. Speak concisely and clearly.",
         },
         callbacks: {
           onmessage: (message: any) => {
@@ -1605,8 +1652,8 @@ const startServer = async () => {
         });
       }
 
-      const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+      const response = await generateContentWithResilience(ai, {
+        model: "gemini-3.7-flash",
         contents: contents,
         config: {
           systemInstruction,
@@ -1716,8 +1763,8 @@ Include alternative solution methods if available.`;
         });
       }
 
-      const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+      const response = await generateContentWithResilience(ai, {
+        model: "gemini-3.7-flash",
         contents: contents,
         config: {
           systemInstruction,
@@ -1812,8 +1859,8 @@ Include alternative solution methods if available.`;
 
       const prompt = `Context Question: "${question}"\nStep Title: "${stepTitle}"\nStep Content: "${stepContent}"\nStudent asked: "${userQuery || "Why did we perform this step?"}"\n\nExplain ONLY this specific step in 2-3 simple, crystal-clear sentences. Include a tiny everyday analogy if helpful.`;
 
-      const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+      const response = await generateContentWithResilience(ai, {
+        model: "gemini-3.7-flash",
         contents: prompt
       });
 
@@ -1840,8 +1887,8 @@ Practice Level: ${level} (similar concept, easier warm-up, or harder challenge)
 
 Generate a brand new practice problem testing the same underlying concept. Do not just change numbers mechanically. Make it contextual and engaging. Provide hints and step-by-step solution.`;
 
-      const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+      const response = await generateContentWithResilience(ai, {
+        model: "gemini-3.7-flash",
         contents: prompt,
         config: {
           responseMimeType: "application/json",
@@ -1879,8 +1926,8 @@ Student Answer: "${studentAnswer}"
 
 Evaluate if the student's answer is correct or partially correct. Provide encouraging feedback and explain any mistakes.`;
 
-      const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+      const response = await generateContentWithResilience(ai, {
+        model: "gemini-3.7-flash",
         contents: prompt
       });
 
@@ -1924,8 +1971,8 @@ Evaluate if the student's answer is correct or partially correct. Provide encour
         promptText += `NOTEBOOK/SOURCE MATERIAL CONTEXT:\n"${notebookContext}"\nCross-reference and cite source facts where relevant.\n`;
       }
 
-      const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+      const response = await generateContentWithResilience(ai, {
+        model: "gemini-3.7-flash",
         contents: promptText,
         config: {
           systemInstruction,
@@ -2087,8 +2134,8 @@ Evaluate if the student's answer is correct or partially correct. Provide encour
         `Active focus node: "${activeNodeLabel || topic}". ` +
         `Answer student questions concisely, clearly, with everyday examples and direct connections to the learning map.`;
 
-      const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+      const response = await generateContentWithResilience(ai, {
+        model: "gemini-3.7-flash",
         contents: `Student asked about "${topic}" (Node: ${activeNodeLabel}): "${question}"\nGraph Context: ${JSON.stringify(graphContext || {})}`,
         config: { systemInstruction }
       });
@@ -2110,8 +2157,8 @@ Evaluate if the student's answer is correct or partially correct. Provide encour
       const prompt = `Compare these two concepts in ${subject}:\nCONCEPT A: "${conceptA}"\nCONCEPT B: "${conceptB}"\n` +
         `Provide a clear breakdown of similarities, key differences, Venn diagram structure, and common mix-ups students make.`;
 
-      const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+      const response = await generateContentWithResilience(ai, {
+        model: "gemini-3.7-flash",
         contents: prompt,
         config: {
           responseMimeType: "application/json",

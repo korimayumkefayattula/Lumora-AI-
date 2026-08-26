@@ -10,13 +10,13 @@
   font-family: Arial, Helvetica, sans-serif;
 }
 
-/* Deep Oceanic & Edual Crimson Atmospheric Themes (Inspired by Reference Design) */
+/* Deep Oceanic & Lumora Crimson Atmospheric Themes */
 :root {
-  --edual-bg-deep: #08080a;
-  --edual-card-bg: rgba(18, 18, 21, 0.88);
-  --edual-card-border: rgba(255, 255, 255, 0.08);
-  --edual-crimson-glow: rgba(225, 29, 72, 0.28);
-  --edual-red-accent: #e11d48;
+  --lumora-bg-deep: #08080a;
+  --lumora-card-bg: rgba(18, 18, 21, 0.88);
+  --lumora-card-border: rgba(255, 255, 255, 0.08);
+  --lumora-crimson-glow: rgba(225, 29, 72, 0.28);
+  --lumora-red-accent: #e11d48;
 }
 
 body {
@@ -31,7 +31,7 @@ body {
   background-attachment: fixed;
 }
 
-.edual-crimson-bg,
+.lumora-crimson-bg,
 .ocean-atmosphere-bg {
   background-color: #08080a;
   background-image: 

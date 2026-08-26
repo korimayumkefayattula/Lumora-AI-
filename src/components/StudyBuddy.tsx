@@ -68,7 +68,7 @@ export default function StudyBuddy({ subjects }: StudyBuddyProps) {
     {
       id: "welcome-id",
       sender: "ai",
-      text: "**Greetings!** I am **Luminati AI**, your supportive study buddy. \n\nAsk me to deconstruct hard concepts, write quick active-recall quizzes, or draft supportive study templates. What is on our mind today?"
+      text: "**Greetings!** I am **LumoraAI**, your supportive study buddy. \n\nAsk me to deconstruct hard concepts, write quick active-recall quizzes, or draft supportive study templates. What is on our mind today?"
     }
   ]);
   const [inputValue, setInputValue] = useState<string>("");
@@ -176,7 +176,7 @@ export default function StudyBuddy({ subjects }: StudyBuddyProps) {
         {
           id: Math.random().toString(),
           sender: "ai",
-          text: "⚠️ Luminati AI encountered an error. Please ensure your GEMINI_API_KEY is configured in Settings."
+          text: "⚠️ LumoraAI encountered an error. Please ensure your GEMINI_API_KEY is configured in Settings."
         }
       ]);
     } finally {
@@ -200,7 +200,7 @@ export default function StudyBuddy({ subjects }: StudyBuddyProps) {
           <Bot className="w-5 h-5 animate-pulse-slow text-blue-100" />
           <div>
             <h3 className="font-bold font-display text-sm tracking-wide">
-              LuminatiAI Mentor
+              LumoraAI Mentor
             </h3>
             <p className="text-[10px] text-blue-100/80 font-medium">
               Your Personal Coach & Best Friend
@@ -279,13 +279,13 @@ export default function StudyBuddy({ subjects }: StudyBuddyProps) {
                   <Bot className="w-4 h-4 animate-spin text-blue-500" />
                 </div>
                 <div className="bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl py-2 px-3 text-xs text-slate-500 flex items-center gap-1">
-                  <span>Luminati AI is thinking...</span>
+                  <span>LumoraAI is thinking...</span>
                 </div>
               </div>
             )}
           </div>
 
-          {/* Luminati AI Quick Prompts block suggestions */}
+          {/* LumoraAI Quick Prompts block suggestions */}
           <div className="px-4 py-2 border-t border-slate-100 dark:border-slate-700 select-none">
             <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1 pb-1">
               <HelpCircle className="w-3.5 h-3.5 text-blue-500" /> Spark Study Inspiration
@@ -344,7 +344,7 @@ export default function StudyBuddy({ subjects }: StudyBuddyProps) {
             <input
               id="buddy-chat-input"
               type="text"
-              placeholder="Ask Luminati AI a topic study question..."
+              placeholder="Ask LumoraAI a topic study question..."
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               disabled={loading}
