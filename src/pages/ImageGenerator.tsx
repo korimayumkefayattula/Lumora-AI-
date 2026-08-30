@@ -25,7 +25,16 @@ import {
   Binary,
   Share2,
   ExternalLink,
-  ChevronRight
+  ChevronRight,
+  Split,
+  Eye,
+  SlidersHorizontal,
+  Shuffle,
+  Lightbulb,
+  Radio,
+  FileCode,
+  CheckCircle2,
+  Search
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -39,32 +48,33 @@ interface GeneratedImageItem {
   style: string;
   subject?: string;
   modelUsed?: string;
+  keyLabels?: string[];
 }
 
 const MODEL_OPTIONS = [
-  { id: 'omniroute', name: 'OmniRoute Proxy (Local / Custom)', desc: 'Routes to your local OmniRoute proxy (:20128)', badge: 'OmniRoute' },
-  { id: 'nano-banana-free', name: 'Nano Banana Free AI', desc: 'High-speed visual illustration engine (Free & Unlimited)', badge: 'Free & Fast' },
-  { id: 'vector-svg', name: 'Nano Banana Vector AI', desc: '100% accurate annotated SVG diagrams (Gemini 3.7)', badge: 'Precision SVG' },
-  { id: 'gemini-3.1-flash-lite-image', name: 'Nano Banana 2 Lite', desc: 'Fast pedagogical visualizer (Gemini Paid Tier)', badge: 'Gemini Lite' },
-  { id: 'gemini-3.1-flash-image', name: 'Nano Banana 2 (HQ)', desc: 'High definition scientific visualizer (Gemini Paid)', badge: 'Gemini HQ' },
-  { id: 'gemini-3-pro-image', name: 'Nano Banana Pro', desc: '4K Ultra crisp textbook studio render (Gemini Pro)', badge: 'Gemini Pro' }
+  { id: 'nano-banana-free', name: 'Lumora Flux HD Engine', desc: 'High-speed textbook & concept visualizer (Free & Fast)', badge: 'Recommended', icon: '⚡' },
+  { id: 'vector-svg', name: 'Lumora Vector AI (Gemini 3.7)', desc: '100% precision annotated SVG diagrams with infinite zoom', badge: 'Vector SVG', icon: '📐' },
+  { id: 'imagen-3', name: 'Google Imagen 3.0 Ultra', desc: 'Studio photorealism & 4K educational macro rendering', badge: 'Imagen 3', icon: '🎨' },
+  { id: 'omniroute', name: 'OmniRoute Proxy', desc: 'Routes to your local OmniRoute proxy endpoint (:20128)', badge: 'Custom', icon: '🔌' }
 ];
 
 const STYLE_OPTIONS = [
-  { id: 'scientific-diagram', name: 'Scientific Diagram', desc: 'Crisp white background & labeled parts', icon: Compass },
+  { id: 'scientific-diagram', name: 'Scientific Diagram', desc: 'Crisp labeled callouts & white backdrop', icon: Compass },
   { id: 'textbook-illustration', name: 'Textbook Illustration', desc: 'Detailed educational print line art', icon: BookOpen },
-  { id: '3d-render', name: '3D Scientific Render', desc: 'Photorealistic volumetric depth & lighting', icon: Layers },
-  { id: 'infographic', name: 'Modern Infographic', desc: 'Clean vector flowcharts and icons', icon: Palette },
-  { id: 'chalkboard', name: 'Chalkboard Sketch', desc: 'Classic blackboard lecture drawing', icon: Sliders },
-  { id: 'photorealistic', name: 'Photorealistic Macro', desc: 'Authentic physical textures & realism', icon: ImageIcon },
+  { id: '3d-render', name: '3D Scientific Render', desc: 'Photorealistic volumetric Octane lighting', icon: Layers },
+  { id: 'infographic', name: 'Modern Infographic', desc: 'Clean vector flowcharts, stats & cards', icon: Palette },
+  { id: 'dark-neon', name: 'Dark Neon High-Tech', desc: 'Glowing cybernetic & holographic lines', icon: Atom },
+  { id: 'blueprint', name: 'Technical Blueprint', desc: 'Engineering navy grid & drafting schematics', icon: Binary },
+  { id: 'chalkboard', name: 'Chalkboard Sketch', desc: 'Classic lecture blackboard sketch', icon: Sliders },
+  { id: 'photorealistic', name: 'Photorealistic Macro', desc: '8K authentic physical textures & realism', icon: ImageIcon },
 ];
 
 const ASPECT_RATIOS = [
-  { id: '16:9', label: '16:9', desc: 'Wide (Slides/Desktop)', class: 'aspect-video' },
-  { id: '4:3', label: '4:3', desc: 'Standard (Notes)', class: 'aspect-[4/3]' },
-  { id: '1:1', label: '1:1', desc: 'Square (Flashcards)', class: 'aspect-square' },
-  { id: '3:4', label: '3:4', desc: 'Portrait (Worksheets)', class: 'aspect-[3/4]' },
-  { id: '9:16', label: '9:16', desc: 'Tall (Mobile)', class: 'aspect-[9/16]' },
+  { id: '16:9', label: '16:9 Wide', desc: 'Slides & Desktop', iconWidth: 'w-6 h-3.5' },
+  { id: '4:3', label: '4:3 Standard', desc: 'Textbook / Notes', iconWidth: 'w-5 h-3.5' },
+  { id: '1:1', label: '1:1 Square', desc: 'Flashcards', iconWidth: 'w-4 h-4' },
+  { id: '3:4', label: '3:4 Portrait', desc: 'Worksheets', iconWidth: 'w-3.5 h-4.5' },
+  { id: '9:16', label: '9:16 Tall', desc: 'Mobile / Stories', iconWidth: 'w-3 h-5' },
 ];
 
 const SUBJECT_PRESETS = [
@@ -74,7 +84,8 @@ const SUBJECT_PRESETS = [
     items: [
       { label: 'Human Heart 4 Chambers', prompt: 'Detailed anatomical cross-section diagram of the human heart showing 4 chambers (left/right atrium and ventricles), bicuspid and tricuspid valves, aorta, pulmonary artery, and directional oxygenated vs deoxygenated blood flow arrows with clear labels on a clean white background.' },
       { label: 'Plant Cell vs Animal Cell', prompt: 'Side-by-side comparative educational diagram of a Plant Cell and an Animal Cell, highlighting cell wall, chloroplasts, large central vacuole, mitochondria, endoplasmic reticulum, and nucleus with color-coded labels.' },
-      { label: 'DNA Double Helix', prompt: 'Structural biochemistry illustration of the DNA double helix showing antiparallel sugar-phosphate backbones, major and minor grooves, and complementary nitrogenous base pairs (Adenine-Thymine, Guanine-Cytosine) with hydrogen bonds.' },
+      { label: 'DNA Double Helix & Base Pairs', prompt: 'Structural biochemistry illustration of the DNA double helix showing antiparallel sugar-phosphate backbones, major and minor grooves, and complementary nitrogenous base pairs (Adenine-Thymine, Guanine-Cytosine) with hydrogen bonds.' },
+      { label: 'Neuron Action Potential Synapse', prompt: 'Detailed microscopic illustration of a neuron chemical synapse showing axon terminal, synaptic vesicles releasing neurotransmitters, synaptic cleft, receptor channels on postsynaptic membrane, and electrical action potential wave.' },
       { label: 'Photosynthesis Mechanism', prompt: 'Educational process diagram of photosynthesis in chloroplast thylakoid and stroma, illustrating light-dependent reactions generating ATP/NADPH and the Calvin Cycle fixing CO2 into glucose.' }
     ]
   },
@@ -85,16 +96,18 @@ const SUBJECT_PRESETS = [
       { label: 'Optics: Concave Mirror Ray Diagram', prompt: 'Precision physics optics ray diagram for a concave mirror with an object placed beyond the center of curvature (C), showing parallel ray through focus (F) and focal ray reflecting parallel to form a real, inverted, diminished image with optical axis, focal point, and pole clearly marked.' },
       { label: 'Electromagnetic Wave Spectrum', prompt: 'Horizontal physics spectrum chart of electromagnetic waves from Radio waves, Microwaves, Infrared, Visible Light rainbow breakdown, Ultraviolet, X-rays to Gamma rays with relative wavelength and frequency values.' },
       { label: 'Electric Motor Working Principle', prompt: 'Clear pedagogical 3D diagram of a DC electric motor showing rectangular armature coil in a permanent magnetic field, carbon brushes, split-ring commutator, and Fleming’s Left Hand Rule directional force vectors.' },
-      { label: 'Newton’s Laws Inclined Plane', prompt: 'Free body diagram of a mass m resting on an inclined plane of angle theta, showing weight vector mg, normal force N, gravitational components mg sin(theta) and mg cos(theta), and static friction force.' }
+      { label: 'Newton’s Laws Inclined Plane', prompt: 'Free body diagram of a mass m resting on an inclined plane of angle theta, showing weight vector mg, normal force N, gravitational components mg sin(theta) and mg cos(theta), and static friction force.' },
+      { label: 'Carnot Heat Engine Cycle', prompt: 'Thermodynamics P-V indicator diagram showing the 4 stages of the Carnot cycle (isothermal expansion, adiabatic expansion, isothermal compression, adiabatic compression) with work done area and efficiency formula.' }
     ]
   },
   {
     category: 'Chemistry',
     icon: Compass,
     items: [
-      { label: 'Electrolysis of Water', prompt: 'High-clarity laboratory apparatus diagram for the electrolysis of acidified water using Hoffman apparatus, showing battery DC connection, inert platinum electrodes, anode generating Oxygen gas (1 volume), and cathode generating Hydrogen gas (2 volumes).' },
-      { label: 'Atomic Orbital Hybridization', prompt: '3D orbital shapes diagram showing sp3 hybridization in Methane (CH4), sp2 in Ethene, and sp in Ethyne with tetrahedral bond angles of 109.5 degrees and overlapping sigma bonds.' },
-      { label: 'Periodic Trends Heatmap', prompt: 'Infographic of the periodic table showing directional arrows and trends for Electronegativity, Ionization Energy, Electron Affinity, and Atomic Radius across periods and groups.' }
+      { label: 'Electrolysis of Water Apparatus', prompt: 'High-clarity laboratory apparatus diagram for the electrolysis of acidified water using Hoffman apparatus, showing battery DC connection, inert platinum electrodes, anode generating Oxygen gas (1 volume), and cathode generating Hydrogen gas (2 volumes).' },
+      { label: 'Atomic Orbital Hybridization (sp3)', prompt: '3D orbital shapes diagram showing sp3 hybridization in Methane (CH4), sp2 in Ethene, and sp in Ethyne with tetrahedral bond angles of 109.5 degrees and overlapping sigma and pi bonds.' },
+      { label: 'Periodic Table Trends Infographic', prompt: 'Infographic of the periodic table showing directional arrows and trends for Electronegativity, Ionization Energy, Electron Affinity, and Atomic Radius across periods and groups.' },
+      { label: 'Fractional Distillation of Crude Oil', prompt: 'Cross-section illustration of a petroleum fractional distillation fractionating column showing temperature gradient from bottom (350C) to top (20C) and condensing fractions (bitumen, diesel, kerosene, petrol, refinery gas).' }
     ]
   },
   {
@@ -102,10 +115,30 @@ const SUBJECT_PRESETS = [
     icon: Binary,
     items: [
       { label: 'Trigonometric Unit Circle', prompt: 'Mathematically precise Unit Circle diagram showing key angles in degrees (0 to 360) and radians (0 to 2pi), corresponding (cos theta, sin theta) coordinate values, and quadrant signs on a Cartesian grid.' },
-      { label: 'Pythagorean Theorem Proof', prompt: 'Visual geometric proof diagram of Pythagoras theorem showing a right-angled triangle with sides a, b, hypotenuse c and square areas a^2, b^2, c^2 color-coded to show a^2 + b^2 = c^2.' },
-      { label: 'Binary Search Tree & Traversals', prompt: 'Computer science data structure diagram of a balanced Binary Search Tree (BST) showing root, parent, left/right child nodes, and step-by-step Inorder, Preorder, and Postorder traversal routes.' }
+      { label: 'Pythagorean Theorem Visual Proof', prompt: 'Visual geometric proof diagram of Pythagoras theorem showing a right-angled triangle with sides a, b, hypotenuse c and square areas a^2, b^2, c^2 color-coded to show a^2 + b^2 = c^2.' },
+      { label: 'Binary Search Tree & Traversals', prompt: 'Computer science data structure diagram of a balanced Binary Search Tree (BST) showing root, parent, left/right child nodes, and step-by-step Inorder, Preorder, and Postorder traversal routes.' },
+      { label: 'Neural Network Architecture', prompt: 'Deep learning neural network architecture diagram displaying input layer neurons, multi-layer hidden representations with weight connections, ReLU activations, and softmax classification output layer.' }
+    ]
+  },
+  {
+    category: 'Astronomy',
+    icon: Sparkles,
+    items: [
+      { label: 'Solar System Planetary Orbits', prompt: 'Scale-referenced pedagogical diagram of the Solar System showing the Sun, Terrestrial planets (Mercury, Venus, Earth, Mars), Asteroid Belt, Gas Giants (Jupiter, Saturn), Ice Giants (Uranus, Neptune), and Kuiper Belt.' },
+      { label: 'Black Hole Structure & Event Horizon', prompt: 'Astrophysical illustration of a spinning Kerr Black Hole showing the central singularity, event horizon, photon sphere, swirling glowing accretion disk with relativistic beaming, and relativistic plasma jets.' },
+      { label: 'Stellar Evolution Life Cycle', prompt: 'Flowchart diagram of stellar evolution from Stellar Nebula to Average Star vs Massive Star branches, ending in Red Giant, Planetary Nebula, White Dwarf, Supernova, Neutron Star, and Black Hole.' }
     ]
   }
+];
+
+const RANDOM_CONCEPT_IDEAS = [
+  "Cross-section of human eye with cornea, lens, retina, fovea, and optic nerve",
+  "Plate tectonics convergent vs divergent boundary subduction zone with magma chambers",
+  "Nitrogen cycle in ecosystem showing nitrogen fixation, nitrification, assimilation, and denitrification",
+  "Doppler effect wave compression with moving sound source and observer frequency shift",
+  "Enzyme-substrate lock and key mechanism versus induced fit model with active site transition state",
+  "Hydraulic press Pascal's Principle showing input piston force F1, area A1 and output lifting force F2, area A2",
+  "Bohr model versus quantum mechanical electron cloud probability density for Hydrogen atom"
 ];
 
 export default function ImageGenerator() {
@@ -115,13 +148,17 @@ export default function ImageGenerator() {
   const [selectedStyle, setSelectedStyle] = useState("scientific-diagram");
   const [selectedAspect, setSelectedAspect] = useState("16:9");
   const [activeCategory, setActiveCategory] = useState("Biology");
+  const [qualityBoost, setQualityBoost] = useState(true);
   
   const [currentImage, setCurrentImage] = useState<GeneratedImageItem | null>(null);
+  const [comparisonImage, setComparisonImage] = useState<GeneratedImageItem | null>(null);
+  const [isCompareMode, setIsCompareMode] = useState(false);
   const [history, setHistory] = useState<GeneratedImageItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [enhancing, setEnhancing] = useState(false);
   const [copied, setCopied] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [historyFilter, setHistoryFilter] = useState("");
   
   // Remix / Image Input
   const [inputImage, setInputImage] = useState<string | null>(null);
@@ -140,6 +177,9 @@ export default function ImageGenerator() {
         setHistory(parsed);
         if (parsed.length > 0) {
           setCurrentImage(parsed[0]);
+          if (parsed.length > 1) {
+            setComparisonImage(parsed[1]);
+          }
         }
       }
     } catch (e) {
@@ -150,7 +190,7 @@ export default function ImageGenerator() {
   // Save history to localStorage
   const saveToHistory = (item: GeneratedImageItem) => {
     setHistory(prev => {
-      const updated = [item, ...prev.filter(i => i.id !== item.id)].slice(0, 30);
+      const updated = [item, ...prev.filter(i => i.id !== item.id)].slice(0, 40);
       try {
         localStorage.setItem('lumora_generated_images', JSON.stringify(updated));
       } catch (e) {}
@@ -159,7 +199,7 @@ export default function ImageGenerator() {
   };
 
   const clearHistory = () => {
-    if (confirm("Are you sure you want to clear your generated images history?")) {
+    if (confirm("Are you sure you want to clear your generated diagrams history?")) {
       setHistory([]);
       try {
         localStorage.removeItem('lumora_generated_images');
@@ -186,11 +226,20 @@ export default function ImageGenerator() {
       if (data.enhancedPrompt) {
         setPrompt(data.enhancedPrompt);
       }
+      if (data.recommendedStyle && STYLE_OPTIONS.some(s => s.id === data.recommendedStyle)) {
+        setSelectedStyle(data.recommendedStyle);
+      }
     } catch (err: any) {
       console.error(err);
     } finally {
       setEnhancing(false);
     }
+  };
+
+  // Surprise Me / Random Concept
+  const handleRandomPrompt = () => {
+    const randomTopic = RANDOM_CONCEPT_IDEAS[Math.floor(Math.random() * RANDOM_CONCEPT_IDEAS.length)];
+    setPrompt(randomTopic);
   };
 
   // Generate Image
@@ -209,13 +258,15 @@ export default function ImageGenerator() {
           aspectRatio: selectedAspect,
           style: selectedStyle,
           model: selectedModel,
-          inputImage: inputImage || undefined
+          inputImage: inputImage || undefined,
+          subject: activeCategory,
+          qualityBoost
         }),
       });
 
       const data = await res.json();
       if (!res.ok || !data.imageUrl) {
-        throw new Error(data.details || data.error || "Failed to generate image.");
+        throw new Error(data.details || data.error || "Failed to generate visual diagram.");
       }
 
       const newItem: GeneratedImageItem = {
@@ -226,14 +277,17 @@ export default function ImageGenerator() {
         aspectRatio: selectedAspect,
         style: selectedStyle,
         subject: activeCategory,
-        modelUsed: data.modelUsed || (selectedModel === 'nano-banana-free' ? 'Nano Banana Free Engine' : 'Nano Banana 2 Lite')
+        modelUsed: data.modelUsed || 'Lumora AI Visualizer'
       };
 
+      if (currentImage) {
+        setComparisonImage(currentImage);
+      }
       setCurrentImage(newItem);
       saveToHistory(newItem);
     } catch (err: any) {
       console.error("Generate error:", err);
-      setErrorMessage(err.message || "Failed to generate image. Please try again.");
+      setErrorMessage(err.message || "Failed to synthesize visual. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -255,6 +309,13 @@ export default function ImageGenerator() {
   const handleCopyImage = async () => {
     if (!currentImage?.imageUrl) return;
     try {
+      if (currentImage.imageUrl.startsWith('data:image/svg+xml;base64,')) {
+        const svgCode = atob(currentImage.imageUrl.replace('data:image/svg+xml;base64,', ''));
+        await navigator.clipboard.writeText(svgCode);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+        return;
+      }
       const response = await fetch(currentImage.imageUrl);
       const blob = await response.blob();
       await navigator.clipboard.write([
@@ -263,8 +324,6 @@ export default function ImageGenerator() {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      console.error("Failed to copy image to clipboard:", err);
-      // Fallback: Copy URL text
       navigator.clipboard.writeText(currentImage.imageUrl);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
@@ -272,56 +331,78 @@ export default function ImageGenerator() {
   };
 
   // Download image
-  const handleDownload = () => {
+  const handleDownload = (format: 'png' | 'svg' | 'jpg' = 'png') => {
     if (!currentImage?.imageUrl) return;
     const a = document.createElement('a');
     a.href = currentImage.imageUrl;
-    const filename = `lumora-diagram-${(currentImage.prompt.slice(0, 30).replace(/[^a-zA-Z0-9]/g, '_')) || 'image'}.png`;
+    const ext = currentImage.imageUrl.startsWith('data:image/svg') ? 'svg' : format;
+    const filename = `lumora-${(currentImage.prompt.slice(0, 32).replace(/[^a-zA-Z0-9]/g, '_')) || 'diagram'}.${ext}`;
     a.download = filename;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
   };
 
+  const filteredHistory = history.filter(item => 
+    !historyFilter || 
+    item.prompt.toLowerCase().includes(historyFilter.toLowerCase()) || 
+    (item.subject && item.subject.toLowerCase().includes(historyFilter.toLowerCase()))
+  );
+
   return (
-    <div className="h-full bg-slate-50 dark:bg-slate-950 flex flex-col overflow-hidden text-slate-900 dark:text-slate-100">
+    <div className="h-full bg-slate-50 dark:bg-[#090a10] flex flex-col overflow-hidden text-slate-900 dark:text-slate-100">
       
-      {/* HEADER */}
-      <header className="px-6 py-4 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between shrink-0">
+      {/* HEADER BAR */}
+      <header className="px-6 py-3.5 bg-white dark:bg-[#11131c] border-b border-slate-200 dark:border-slate-800/80 flex items-center justify-between shrink-0 shadow-sm z-10">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 via-yellow-500 to-indigo-600 text-white flex items-center justify-center shadow-md shadow-amber-500/20">
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-rose-600 via-rose-500 to-indigo-600 text-white flex items-center justify-center shadow-lg shadow-rose-500/20">
             <ImageIcon className="w-5 h-5" />
           </div>
           <div>
-            <h1 className="text-xl font-bold font-display tracking-tight flex items-center gap-2">
-              <span>Educational Diagram & Visualizer AI</span>
-              <span className="text-[10px] font-bold uppercase tracking-wider bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 px-2.5 py-0.5 rounded-full border border-amber-300 dark:border-amber-700 flex items-center gap-1">
-                <span>🍌</span>
-                <span>Nano Banana Free AI</span>
+            <h1 className="text-lg font-bold font-display tracking-tight flex items-center gap-2">
+              <span>LumoraAI Studio Visualizer</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider bg-rose-500/10 text-rose-600 dark:text-rose-400 px-2.5 py-0.5 rounded-full border border-rose-500/20 flex items-center gap-1">
+                <Sparkles className="w-3 h-3 text-rose-500" />
+                <span>Next-Gen Image & Diagram AI</span>
               </span>
             </h1>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Generate labeled scientific diagrams, 3D anatomical models, and textbook illustrations with zero quota limits
+              Create high-clarity scientific diagrams, 3D anatomical models, and vector charts powered by Gemini 3.7 & Flux
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
+          {history.length > 1 && (
+            <button
+              onClick={() => setIsCompareMode(!isCompareMode)}
+              className={`text-xs font-semibold px-3 py-1.5 rounded-xl border transition-all flex items-center gap-1.5 ${
+                isCompareMode
+                  ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-300 dark:border-rose-800'
+                  : 'bg-slate-100 dark:bg-slate-800/70 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-200'
+              }`}
+            >
+              <Split className="w-3.5 h-3.5" />
+              <span>{isCompareMode ? 'Exit Split View' : 'Compare Diagrams'}</span>
+            </button>
+          )}
+
           {history.length > 0 && (
             <button
               onClick={clearHistory}
-              className="text-xs text-slate-500 hover:text-red-500 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-red-300 transition-colors flex items-center gap-1.5"
+              className="text-xs text-slate-500 hover:text-red-500 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-red-300 transition-colors flex items-center gap-1.5"
               title="Clear generated history"
             >
               <Trash2 className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Clear History</span>
+              <span className="hidden sm:inline">Clear</span>
             </button>
           )}
+          
           <button
             onClick={() => navigate('/student/explain-simply')}
-            className="text-xs font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 transition-colors flex items-center gap-1"
+            className="text-xs font-semibold bg-rose-50 dark:bg-rose-950/30 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-rose-700 dark:text-rose-300 px-3 py-1.5 rounded-xl border border-rose-200 dark:border-rose-900/50 transition-colors flex items-center gap-1"
           >
-            <span>Explain Simply</span>
+            <span>Explain Topic</span>
             <ChevronRight className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -330,38 +411,49 @@ export default function ImageGenerator() {
       {/* MAIN TWO-COLUMN WORKSPACE */}
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 overflow-hidden">
         
-        {/* LEFT COLUMN: Controls, Prompts, Presets (5 Cols) */}
-        <div className="lg:col-span-5 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col h-full overflow-y-auto p-5 space-y-6">
+        {/* LEFT COLUMN: Controls, Engine Options, Presets (5 Cols) */}
+        <div className="lg:col-span-5 border-r border-slate-200 dark:border-slate-800/80 bg-white dark:bg-[#10121b] flex flex-col h-full overflow-y-auto p-5 space-y-6">
           
           {/* PROMPT INPUT SECTION */}
           <form onSubmit={handleGenerate} className="space-y-4">
             <div>
               <div className="flex items-center justify-between mb-2">
                 <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-blue-500" />
+                  <Sparkles className="w-3.5 h-3.5 text-rose-500" />
                   Concept or Diagram Description
                 </label>
-                <button
-                  type="button"
-                  onClick={handleEnhancePrompt}
-                  disabled={enhancing || !prompt.trim()}
-                  className="text-xs font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                >
-                  {enhancing ? (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  ) : (
-                    <Wand2 className="w-3.5 h-3.5" />
-                  )}
-                  <span>AI Enhance Prompt</span>
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleRandomPrompt}
+                    className="text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white flex items-center gap-1 transition-colors"
+                    title="Insert random educational topic"
+                  >
+                    <Shuffle className="w-3 h-3" />
+                    <span>Surprise Me</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleEnhancePrompt}
+                    disabled={enhancing || !prompt.trim()}
+                    className="text-xs font-semibold text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {enhancing ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Wand2 className="w-3.5 h-3.5" />
+                    )}
+                    <span>AI Enhance</span>
+                  </button>
+                </div>
               </div>
 
               <div className="relative">
                 <textarea
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
-                  placeholder="e.g. Cross-section of a chloroplast showing thylakoids, grana, and stroma with photosynthesis light reaction labels..."
-                  className="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-2xl p-3.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none h-28 text-slate-800 dark:text-slate-100 placeholder:text-slate-400 transition-all leading-relaxed"
+                  placeholder="e.g. Cross-section of a chloroplast showing thylakoid discs, grana stacks, and stroma with photosynthesis light reaction arrows..."
+                  className="w-full bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/80 rounded-2xl p-3.5 text-sm focus:ring-2 focus:ring-rose-500/50 focus:border-rose-500 outline-none resize-none h-28 text-slate-800 dark:text-slate-100 placeholder:text-slate-400 transition-all leading-relaxed"
                 />
                 {prompt && (
                   <button
@@ -393,7 +485,7 @@ export default function ImageGenerator() {
               </div>
 
               {inputImage ? (
-                <div className="flex items-center gap-3 p-2 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 rounded-xl">
+                <div className="flex items-center gap-3 p-2 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50 rounded-xl">
                   <img 
                     src={inputImage} 
                     alt="Reference" 
@@ -401,17 +493,17 @@ export default function ImageGenerator() {
                     className="w-12 h-12 object-cover rounded-lg border border-slate-200 dark:border-slate-700" 
                   />
                   <div className="flex-1 text-xs">
-                    <p className="font-medium text-blue-900 dark:text-blue-300">Reference Image Attached</p>
+                    <p className="font-medium text-rose-900 dark:text-rose-300">Reference Image Attached</p>
                     <p className="text-slate-500 dark:text-slate-400 text-[11px]">The AI will edit and adapt this visual based on your prompt.</p>
                   </div>
                 </div>
               ) : (
                 <div 
                   onClick={() => fileInputRef.current?.click()}
-                  className="border border-dashed border-slate-300 dark:border-slate-700 hover:border-blue-400 dark:hover:border-blue-500 rounded-xl p-2.5 flex items-center justify-center gap-2 text-xs text-slate-500 dark:text-slate-400 cursor-pointer transition-colors bg-slate-50/50 dark:bg-slate-800/20"
+                  className="border border-dashed border-slate-300 dark:border-slate-700/80 hover:border-rose-400 dark:hover:border-rose-500 rounded-xl p-2.5 flex items-center justify-center gap-2 text-xs text-slate-500 dark:text-slate-400 cursor-pointer transition-colors bg-slate-50/50 dark:bg-slate-800/20"
                 >
                   <Upload className="w-4 h-4 text-slate-400" />
-                  <span>Upload textbook photo or sketch to modify</span>
+                  <span>Upload textbook photo, sketch, or diagram to remix</span>
                   <input
                     type="file"
                     ref={fileInputRef}
@@ -423,16 +515,25 @@ export default function ImageGenerator() {
               )}
             </div>
 
-            {/* AI MODEL SELECTOR */}
+            {/* AI ENGINE SELECTOR */}
             <div>
               <div className="flex items-center justify-between mb-2">
                 <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                  <span>🍌</span>
-                  <span>AI Image Engine</span>
+                  <Layers className="w-3.5 h-3.5 text-rose-500" />
+                  <span>AI Rendering Engine</span>
                 </label>
-                <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-900">
-                  Free & Unlimited Available
-                </span>
+                <div className="flex items-center gap-1.5">
+                  <input 
+                    type="checkbox"
+                    id="quality-boost"
+                    checked={qualityBoost}
+                    onChange={(e) => setQualityBoost(e.target.checked)}
+                    className="rounded border-slate-300 text-rose-600 focus:ring-rose-500 w-3.5 h-3.5 cursor-pointer"
+                  />
+                  <label htmlFor="quality-boost" className="text-[11px] font-medium text-slate-600 dark:text-slate-400 cursor-pointer select-none">
+                    Studio Clarity Boost
+                  </label>
+                </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {MODEL_OPTIONS.map((m) => {
@@ -444,14 +545,17 @@ export default function ImageGenerator() {
                       onClick={() => setSelectedModel(m.id)}
                       className={`p-2.5 rounded-xl border text-left flex flex-col justify-between transition-all ${
                         isSelected
-                          ? 'border-amber-500 bg-amber-50/60 dark:bg-amber-950/40 text-amber-950 dark:text-amber-200 ring-1 ring-amber-400'
-                          : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 bg-white dark:bg-slate-800/40 text-slate-700 dark:text-slate-300'
+                          ? 'border-rose-500 bg-rose-50/60 dark:bg-rose-950/40 text-rose-950 dark:text-rose-200 ring-1 ring-rose-400'
+                          : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-white dark:bg-slate-800/40 text-slate-700 dark:text-slate-300'
                       }`}
                     >
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs font-bold leading-tight">{m.name}</span>
-                        <span className={`text-[9px] px-1.5 py-0.2 rounded font-semibold ${
-                          isSelected ? 'bg-amber-200 dark:bg-amber-900 text-amber-900 dark:text-amber-100' : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
+                        <span className="text-xs font-bold leading-tight flex items-center gap-1">
+                          <span>{m.icon}</span>
+                          <span>{m.name}</span>
+                        </span>
+                        <span className={`text-[9px] px-1.5 py-0.5 rounded font-semibold ${
+                          isSelected ? 'bg-rose-200 dark:bg-rose-900 text-rose-900 dark:text-rose-100' : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
                         }`}>
                           {m.badge}
                         </span>
@@ -466,7 +570,7 @@ export default function ImageGenerator() {
             {/* STYLE SELECTOR */}
             <div>
               <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-2">
-                Illustration Style
+                Visual & Pedagogical Style
               </label>
               <div className="grid grid-cols-2 gap-2">
                 {STYLE_OPTIONS.map((style) => {
@@ -479,11 +583,11 @@ export default function ImageGenerator() {
                       onClick={() => setSelectedStyle(style.id)}
                       className={`p-2.5 rounded-xl border text-left flex items-start gap-2.5 transition-all ${
                         isSelected 
-                          ? 'border-blue-600 bg-blue-50/60 dark:bg-blue-950/40 text-blue-900 dark:text-blue-200 ring-1 ring-blue-500' 
-                          : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 bg-white dark:bg-slate-800/40 text-slate-700 dark:text-slate-300'
+                          ? 'border-rose-500 bg-rose-50/60 dark:bg-rose-950/40 text-rose-900 dark:text-rose-200 ring-1 ring-rose-500' 
+                          : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-white dark:bg-slate-800/40 text-slate-700 dark:text-slate-300'
                       }`}
                     >
-                      <Icon className={`w-4 h-4 mt-0.5 shrink-0 ${isSelected ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400'}`} />
+                      <Icon className={`w-4 h-4 mt-0.5 shrink-0 ${isSelected ? 'text-rose-600 dark:text-rose-400' : 'text-slate-400'}`} />
                       <div>
                         <div className="text-xs font-bold leading-tight">{style.name}</div>
                         <div className="text-[10px] text-slate-400 leading-tight mt-0.5">{style.desc}</div>
@@ -497,23 +601,27 @@ export default function ImageGenerator() {
             {/* ASPECT RATIO */}
             <div>
               <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-2">
-                Aspect Ratio
+                Output Dimension / Aspect Ratio
               </label>
-              <div className="flex flex-wrap gap-2">
-                {ASPECT_RATIOS.map((ratio) => (
-                  <button
-                    key={ratio.id}
-                    type="button"
-                    onClick={() => setSelectedAspect(ratio.id)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${
-                      selectedAspect === ratio.id
-                        ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
-                        : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:border-slate-300'
-                    }`}
-                  >
-                    {ratio.label}
-                  </button>
-                ))}
+              <div className="grid grid-cols-5 gap-1.5">
+                {ASPECT_RATIOS.map((ratio) => {
+                  const isSelected = selectedAspect === ratio.id;
+                  return (
+                    <button
+                      key={ratio.id}
+                      type="button"
+                      onClick={() => setSelectedAspect(ratio.id)}
+                      className={`py-2 px-1.5 rounded-xl text-xs font-semibold border flex flex-col items-center gap-1 transition-all ${
+                        isSelected
+                          ? 'bg-rose-600 text-white border-rose-600 shadow-md shadow-rose-600/20'
+                          : 'bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:border-slate-300'
+                      }`}
+                    >
+                      <div className={`border rounded ${isSelected ? 'border-white bg-white/30' : 'border-slate-400 bg-slate-200 dark:bg-slate-700'} ${ratio.iconWidth}`} />
+                      <span className="text-[10px] font-bold">{ratio.label.split(' ')[0]}</span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
@@ -522,7 +630,7 @@ export default function ImageGenerator() {
               <div className="p-3 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 rounded-xl text-xs text-red-600 dark:text-red-400 leading-relaxed flex items-start gap-2">
                 <X className="w-4 h-4 shrink-0 mt-0.5" />
                 <div>
-                  <strong className="font-bold">Generation notice: </strong>
+                  <strong className="font-bold">Notice: </strong>
                   <span>{errorMessage}</span>
                 </div>
               </div>
@@ -532,36 +640,37 @@ export default function ImageGenerator() {
             <button
               type="submit"
               disabled={loading || !prompt.trim()}
-              className="w-full bg-gradient-to-r from-amber-500 via-amber-600 to-indigo-600 hover:from-amber-600 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3.5 px-4 rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20 transition-all active:scale-[0.99]"
+              className="w-full bg-gradient-to-r from-rose-600 via-rose-500 to-indigo-600 hover:from-rose-500 hover:to-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3.5 px-4 rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-rose-600/25 transition-all active:scale-[0.99]"
             >
               {loading ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />
-                  <span>Synthesizing Visual with Nano Banana...</span>
+                  <span>Synthesizing High-Precision Visual...</span>
                 </>
               ) : (
                 <>
                   <Sparkles className="w-5 h-5" />
-                  <span>Generate Diagram (Nano Banana)</span>
+                  <span>Generate Diagram (LumoraAI)</span>
                 </>
               )}
             </button>
           </form>
 
           {/* CURATED SUBJECT PRESET PROMPTS */}
-          <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
+          <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                Curated Syllabus Diagrams
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                <BookOpen className="w-3.5 h-3.5 text-rose-500" />
+                <span>Curated Syllabus Diagrams</span>
               </h3>
-              <div className="flex gap-1">
+              <div className="flex gap-1 overflow-x-auto pb-1 max-w-[220px]">
                 {SUBJECT_PRESETS.map((p) => (
                   <button
                     key={p.category}
                     onClick={() => setActiveCategory(p.category)}
-                    className={`text-[11px] px-2.5 py-1 rounded-lg font-semibold transition-all ${
+                    className={`text-[11px] px-2 py-0.5 rounded-lg font-semibold transition-all shrink-0 ${
                       activeCategory === p.category
-                        ? 'bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800'
+                        ? 'bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800'
                         : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800'
                     }`}
                   >
@@ -578,11 +687,11 @@ export default function ImageGenerator() {
                   onClick={() => {
                     setPrompt(item.prompt);
                   }}
-                  className="text-left p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 hover:bg-blue-50 dark:hover:bg-blue-950/30 border border-slate-200 dark:border-slate-700/80 hover:border-blue-300 dark:hover:border-blue-800 transition-all group"
+                  className="text-left p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 hover:bg-rose-50 dark:hover:bg-rose-950/30 border border-slate-200 dark:border-slate-800 hover:border-rose-300 dark:hover:border-rose-800 transition-all group"
                 >
-                  <div className="text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 flex items-center justify-between">
+                  <div className="text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-rose-600 dark:group-hover:text-rose-400 flex items-center justify-between">
                     <span>{item.label}</span>
-                    <Sparkles className="w-3 h-3 text-slate-300 group-hover:text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <Sparkles className="w-3 h-3 text-slate-300 group-hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
                   <div className="text-[11px] text-slate-400 line-clamp-1 mt-0.5">
                     {item.prompt}
@@ -595,150 +704,204 @@ export default function ImageGenerator() {
         </div>
 
         {/* RIGHT COLUMN: Interactive Canvas & Gallery (7 Cols) */}
-        <div className="lg:col-span-7 bg-slate-100/70 dark:bg-slate-950 p-6 flex flex-col overflow-y-auto space-y-6">
+        <div className="lg:col-span-7 bg-slate-100/60 dark:bg-[#07080d] p-6 flex flex-col overflow-y-auto space-y-6">
           
-          {/* PRIMARY DISPLAY CANVAS */}
-          <div className="flex-1 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm p-4 flex flex-col justify-between min-h-[420px]">
-            
-            {/* Top Toolbar */}
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800 text-xs">
-              <div className="flex items-center gap-2 text-slate-500 font-medium">
-                {currentImage ? (
-                  <>
-                    <span className="font-bold text-slate-800 dark:text-slate-200">
-                      {STYLE_OPTIONS.find(s => s.id === currentImage.style)?.name || 'Diagram'}
-                    </span>
-                    <span>•</span>
-                    <span>Ratio {currentImage.aspectRatio}</span>
-                    <span>•</span>
-                    <span className="px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 font-semibold text-[10px] border border-amber-200 dark:border-amber-800 flex items-center gap-1">
-                      <span>🍌</span>
-                      <span>{currentImage.modelUsed || 'Nano Banana AI'}</span>
-                    </span>
-                  </>
-                ) : (
-                  <span>Canvas Preview</span>
-                )}
-              </div>
-
-              {currentImage && (
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={handleCopyImage}
-                    className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors flex items-center gap-1.5 text-xs font-semibold"
-                    title="Copy image"
-                  >
-                    {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
-                    <span>{copied ? "Copied!" : "Copy"}</span>
-                  </button>
-                  <button
-                    onClick={handleDownload}
-                    className="p-2 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors flex items-center gap-1.5 text-xs font-semibold border border-blue-200 dark:border-blue-800"
-                    title="Download PNG"
-                  >
-                    <Download className="w-3.5 h-3.5" />
-                    <span>Download PNG</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      setZoomLevel(1);
-                      setIsLightboxOpen(true);
-                    }}
-                    className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
-                    title="Expand Fullscreen"
-                  >
-                    <Maximize2 className="w-3.5 h-3.5" />
-                  </button>
+          {/* PRIMARY DISPLAY CANVAS OR SPLIT COMPARISON */}
+          {isCompareMode && comparisonImage && currentImage ? (
+            /* SPLIT COMPARISON VIEW */
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
+              <div className="bg-white dark:bg-[#11131c] rounded-3xl border border-slate-200 dark:border-slate-800 p-4 flex flex-col justify-between">
+                <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800 text-xs">
+                  <span className="font-bold text-slate-700 dark:text-slate-300">Diagram A (Active)</span>
+                  <span className="text-[10px] text-slate-400">{currentImage.aspectRatio}</span>
                 </div>
-              )}
-            </div>
-
-            {/* Canvas Main Image / Loading State */}
-            <div className="flex-1 flex items-center justify-center p-4 relative overflow-hidden min-h-[300px]">
-              {loading ? (
-                <div className="flex flex-col items-center gap-4 text-center max-w-sm">
-                  <div className="relative">
-                    <div className="w-16 h-16 rounded-3xl bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center text-blue-600 animate-pulse">
-                      <Sparkles className="w-8 h-8 animate-spin" />
-                    </div>
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">
-                      Generating Scientific Diagram...
-                    </h4>
-                    <p className="text-xs text-slate-400 mt-1">
-                      Gemini is rendering high-precision educational labels and structures.
-                    </p>
-                  </div>
-                </div>
-              ) : currentImage ? (
-                <div className="w-full h-full flex items-center justify-center relative group">
+                <div className="flex-1 flex items-center justify-center p-2">
                   <img
                     src={currentImage.imageUrl}
                     alt={currentImage.prompt}
                     referrerPolicy="no-referrer"
-                    className="max-w-full max-h-[460px] object-contain rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800"
+                    className="max-w-full max-h-[360px] object-contain rounded-xl"
                   />
-                  <div className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2">
+                </div>
+                <p className="text-[11px] text-slate-500 line-clamp-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                  {currentImage.prompt}
+                </p>
+              </div>
+
+              <div className="bg-white dark:bg-[#11131c] rounded-3xl border border-slate-200 dark:border-slate-800 p-4 flex flex-col justify-between">
+                <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800 text-xs">
+                  <span className="font-bold text-slate-700 dark:text-slate-300">Diagram B (Previous)</span>
+                  <span className="text-[10px] text-slate-400">{comparisonImage.aspectRatio}</span>
+                </div>
+                <div className="flex-1 flex items-center justify-center p-2">
+                  <img
+                    src={comparisonImage.imageUrl}
+                    alt={comparisonImage.prompt}
+                    referrerPolicy="no-referrer"
+                    className="max-w-full max-h-[360px] object-contain rounded-xl"
+                  />
+                </div>
+                <p className="text-[11px] text-slate-500 line-clamp-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                  {comparisonImage.prompt}
+                </p>
+              </div>
+            </div>
+          ) : (
+            /* STANDARD DISPLAY CANVAS */
+            <div className="flex-1 bg-white dark:bg-[#11131c] rounded-3xl border border-slate-200 dark:border-slate-800/80 shadow-sm p-4 flex flex-col justify-between min-h-[440px]">
+              
+              {/* Top Toolbar */}
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800/80 text-xs">
+                <div className="flex items-center gap-2 text-slate-500 font-medium">
+                  {currentImage ? (
+                    <>
+                      <span className="font-bold text-slate-800 dark:text-slate-200">
+                        {STYLE_OPTIONS.find(s => s.id === currentImage.style)?.name || 'Diagram'}
+                      </span>
+                      <span>•</span>
+                      <span>Ratio {currentImage.aspectRatio}</span>
+                      <span>•</span>
+                      <span className="px-2.5 py-0.5 rounded-full bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 font-semibold text-[10px] border border-rose-200 dark:border-rose-800 flex items-center gap-1">
+                        <Sparkles className="w-2.5 h-2.5 text-rose-500" />
+                        <span>{currentImage.modelUsed || 'LumoraAI'}</span>
+                      </span>
+                    </>
+                  ) : (
+                    <span>Studio Canvas Preview</span>
+                  )}
+                </div>
+
+                {currentImage && (
+                  <div className="flex items-center gap-2">
                     <button
-                      onClick={() => setInputImage(currentImage.imageUrl)}
-                      className="bg-black/75 hover:bg-black text-white text-xs px-3 py-1.5 rounded-full font-medium shadow-lg backdrop-blur-sm flex items-center gap-1.5"
+                      onClick={handleCopyImage}
+                      className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors flex items-center gap-1.5 text-xs font-semibold"
+                      title="Copy image or SVG data"
                     >
-                      <RefreshCw className="w-3 h-3" />
-                      <span>Remix / Edit</span>
+                      {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                      <span>{copied ? "Copied!" : "Copy"}</span>
+                    </button>
+                    
+                    <button
+                      onClick={() => handleDownload('png')}
+                      className="p-2 rounded-xl bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/50 transition-colors flex items-center gap-1.5 text-xs font-semibold border border-rose-200 dark:border-rose-800"
+                      title="Download PNG image"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      <span>Download</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setZoomLevel(1);
+                        setIsLightboxOpen(true);
+                      }}
+                      className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                      title="Expand Fullscreen"
+                    >
+                      <Maximize2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Canvas Main Image / Loading State */}
+              <div className="flex-1 flex items-center justify-center p-4 relative overflow-hidden min-h-[340px]">
+                {loading ? (
+                  <div className="flex flex-col items-center gap-4 text-center max-w-sm">
+                    <div className="relative">
+                      <div className="w-16 h-16 rounded-3xl bg-rose-100 dark:bg-rose-900/40 flex items-center justify-center text-rose-600 animate-pulse">
+                        <Sparkles className="w-8 h-8 animate-spin" />
+                      </div>
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                        Synthesizing Scientific Visual...
+                      </h4>
+                      <p className="text-xs text-slate-400 mt-1">
+                        LumoraAI is calculating labeled anatomical callouts and optical gradients.
+                      </p>
+                    </div>
+                  </div>
+                ) : currentImage ? (
+                  <div className="w-full h-full flex items-center justify-center relative group">
+                    <img
+                      src={currentImage.imageUrl}
+                      alt={currentImage.prompt}
+                      referrerPolicy="no-referrer"
+                      className="max-w-full max-h-[480px] object-contain rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800/80"
+                    />
+                    <div className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2">
+                      <button
+                        onClick={() => setInputImage(currentImage.imageUrl)}
+                        className="bg-black/80 hover:bg-black text-white text-xs px-3 py-1.5 rounded-full font-medium shadow-lg backdrop-blur-sm flex items-center gap-1.5"
+                      >
+                        <RefreshCw className="w-3 h-3" />
+                        <span>Remix / Edit</span>
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center gap-3 text-center max-w-sm text-slate-400">
+                    <div className="w-16 h-16 rounded-3xl bg-slate-50 dark:bg-slate-800/60 flex items-center justify-center text-slate-300 dark:text-slate-600">
+                      <ImageIcon className="w-8 h-8" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-slate-600 dark:text-slate-400">
+                        Your Studio Visual Will Appear Here
+                      </h4>
+                      <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
+                        Type any science, math, or history concept or select one of the curated curriculum presets to begin.
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Prompt Footnote & Direct Action Links */}
+              {currentImage && (
+                <div className="pt-3 border-t border-slate-100 dark:border-slate-800/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+                  <div className="text-slate-600 dark:text-slate-400 line-clamp-2 max-w-lg">
+                    <span className="font-semibold text-slate-900 dark:text-slate-200">Concept Prompt: </span>
+                    {currentImage.prompt}
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      onClick={() => navigate('/student/explain-simply')}
+                      className="text-xs font-semibold text-rose-600 dark:text-rose-400 hover:underline flex items-center gap-1"
+                    >
+                      <span>Explain in detail</span>
+                      <ExternalLink className="w-3 h-3" />
                     </button>
                   </div>
                 </div>
-              ) : (
-                <div className="flex flex-col items-center gap-3 text-center max-w-sm text-slate-400">
-                  <div className="w-16 h-16 rounded-3xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-300 dark:text-slate-600">
-                    <ImageIcon className="w-8 h-8" />
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-bold text-slate-600 dark:text-slate-400">
-                      Your Diagram Will Appear Here
-                    </h4>
-                    <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
-                      Type a science concept or click one of the syllabus presets on the left to start.
-                    </p>
-                  </div>
-                </div>
               )}
+
             </div>
-
-            {/* Prompt Footnote & Direct Action Links */}
-            {currentImage && (
-              <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
-                <div className="text-slate-600 dark:text-slate-400 line-clamp-2 max-w-lg">
-                  <span className="font-semibold text-slate-900 dark:text-slate-200">Prompt: </span>
-                  {currentImage.prompt}
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <button
-                    onClick={() => navigate('/student/explain-simply')}
-                    className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1"
-                  >
-                    <span>Explain in detail</span>
-                    <ExternalLink className="w-3 h-3" />
-                  </button>
-                </div>
-              </div>
-            )}
-
-          </div>
+          )}
 
           {/* HISTORY GALLERY */}
           {history.length > 0 && (
-            <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm p-4">
+            <div className="bg-white dark:bg-[#11131c] rounded-3xl border border-slate-200 dark:border-slate-800/80 shadow-sm p-4">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                  <Layers className="w-3.5 h-3.5 text-blue-500" />
+                  <Layers className="w-3.5 h-3.5 text-rose-500" />
                   <span>Session Gallery ({history.length})</span>
                 </h3>
+                <div className="relative w-48">
+                  <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input 
+                    type="text"
+                    placeholder="Filter gallery..."
+                    value={historyFilter}
+                    onChange={(e) => setHistoryFilter(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-xl pl-8 pr-2 py-1 text-xs text-slate-700 dark:text-slate-200 outline-none"
+                  />
+                </div>
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">
-                {history.map((item) => {
+                {filteredHistory.map((item) => {
                   const isCurrent = currentImage?.id === item.id;
                   return (
                     <div
@@ -746,8 +909,8 @@ export default function ImageGenerator() {
                       onClick={() => setCurrentImage(item)}
                       className={`group relative rounded-xl overflow-hidden aspect-video bg-slate-100 dark:bg-slate-800 cursor-pointer border-2 transition-all ${
                         isCurrent 
-                          ? 'border-blue-600 ring-2 ring-blue-500/20' 
-                          : 'border-transparent hover:border-slate-300 dark:hover:border-slate-600'
+                          ? 'border-rose-500 ring-2 ring-rose-500/20' 
+                          : 'border-transparent hover:border-slate-300 dark:hover:border-slate-700'
                       }`}
                     >
                       <img
@@ -756,7 +919,7 @@ export default function ImageGenerator() {
                         referrerPolicy="no-referrer"
                         className="w-full h-full object-cover"
                       />
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 flex flex-col justify-between">
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 flex flex-col justify-between">
                         <span className="text-[9px] font-bold text-white uppercase tracking-wider bg-black/60 px-1 rounded self-start">
                           {item.aspectRatio}
                         </span>
@@ -777,12 +940,13 @@ export default function ImageGenerator() {
 
       {/* FULLSCREEN LIGHTBOX MODAL */}
       {isLightboxOpen && currentImage && (
-        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex flex-col">
+        <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex flex-col">
           {/* Lightbox Header */}
           <div className="p-4 flex items-center justify-between text-white border-b border-white/10">
             <div className="flex items-center gap-3">
               <span className="font-bold text-sm">{STYLE_OPTIONS.find(s => s.id === currentImage.style)?.name}</span>
               <span className="text-xs text-white/60">({currentImage.aspectRatio})</span>
+              <span className="text-xs text-rose-400 font-semibold">• {currentImage.modelUsed}</span>
             </div>
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-1 bg-white/10 rounded-xl p-1">
@@ -795,7 +959,7 @@ export default function ImageGenerator() {
                 </button>
                 <span className="text-xs font-mono px-2">{Math.round(zoomLevel * 100)}%</span>
                 <button
-                  onClick={() => setZoomLevel(prev => Math.min(3, prev + 0.25))}
+                  onClick={() => setZoomLevel(prev => Math.min(4, prev + 0.25))}
                   className="p-1.5 rounded-lg hover:bg-white/20 text-white transition-colors"
                   title="Zoom In"
                 >
@@ -811,8 +975,8 @@ export default function ImageGenerator() {
               </div>
 
               <button
-                onClick={handleDownload}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors"
+                onClick={() => handleDownload('png')}
+                className="bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors"
               >
                 <Download className="w-3.5 h-3.5" />
                 <span>Download</span>
@@ -839,7 +1003,7 @@ export default function ImageGenerator() {
           </div>
 
           {/* Lightbox Footer */}
-          <div className="p-4 bg-black/60 text-white/80 text-xs text-center border-t border-white/10">
+          <div className="p-4 bg-black/70 text-white/90 text-xs text-center border-t border-white/10">
             {currentImage.prompt}
           </div>
         </div>
