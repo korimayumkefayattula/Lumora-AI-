@@ -71,85 +71,89 @@ export const WellnessWidget: React.FC = () => {
         )}
 
         {/* 2-Column Row: Water + Eye Timer */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-3.5">
           {/* Hydration Tracker */}
-          <div className={`p-3.5 rounded-2xl border transition-all ${
+          <div className={`p-4 rounded-3xl clay-surface transition-all ${
             theme === 'focus'
-              ? 'bg-[#201c18] border-[#382e25]'
-              : 'bg-sky-50/60 dark:bg-slate-800/40 border-sky-100 dark:border-slate-700/60'
+              ? 'bg-gradient-to-br from-[#182329] to-[#12191d] border border-sky-500/20 text-sky-100'
+              : 'bg-gradient-to-br from-sky-50/90 via-blue-50/70 to-white text-slate-800 border border-sky-200/80 dark:from-slate-800/80 dark:to-slate-900/90 dark:border-white/10'
           }`}>
             <div className="flex items-center justify-between mb-1.5">
-              <span className="text-[11px] font-bold text-slate-400 theme-focus:text-amber-300/60 uppercase">
+              <span className="text-[10px] font-black uppercase tracking-wider text-sky-600 dark:text-sky-400 theme-focus:text-sky-300">
                 Hydration
               </span>
-              <Droplet className="w-4 h-4 text-sky-500 fill-sky-500/30" />
+              <div className="w-6 h-6 rounded-full flex items-center justify-center clay-pill bg-sky-500/20">
+                <Droplet className="w-3.5 h-3.5 text-sky-500 fill-sky-500/40" />
+              </div>
             </div>
-            <div className="flex items-baseline gap-1">
-              <span className="text-2xl font-black font-display text-sky-500">
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-3xl font-black font-display text-sky-500 drop-shadow-xs">
                 {glasses}
               </span>
               <span className="text-xs font-bold text-slate-400">/ {targetGlasses} cups</span>
             </div>
 
             {/* Quick +/- buttons */}
-            <div className="mt-2.5 flex items-center gap-1.5">
+            <div className="mt-3 flex items-center gap-2">
               <button
                 onClick={() => setGlasses(Math.max(0, glasses - 1))}
-                className="p-1 rounded-lg bg-white dark:bg-slate-700 theme-focus:bg-[#14120f] border border-slate-200 dark:border-slate-600 text-slate-500 hover:text-slate-800"
+                className="w-8 h-8 rounded-xl flex items-center justify-center neuro-btn-convex text-slate-500 hover:text-slate-800 dark:text-slate-300 bg-white dark:bg-slate-800"
                 title="Remove cup"
               >
-                <Minus className="w-3 h-3" />
+                <Minus className="w-3.5 h-3.5" />
               </button>
               <button
                 onClick={() => setGlasses(glasses + 1)}
-                className="flex-1 py-1 px-2 rounded-lg bg-sky-500 text-white font-bold text-[10px] flex items-center justify-center gap-1 shadow-xs hover:bg-sky-600 active:scale-95"
+                className="flex-1 py-1.5 px-2.5 rounded-xl clay-btn bg-gradient-to-r from-sky-500 to-blue-600 text-white font-extrabold text-[10px] flex items-center justify-center gap-1.5 shadow-[0_6px_14px_rgba(14,165,233,0.3)]"
               >
-                <Plus className="w-3 h-3" /> +250ml
+                <Plus className="w-3.5 h-3.5" /> +250ml
               </button>
             </div>
           </div>
 
           {/* 20-20-20 Eye Timer */}
-          <div className={`p-3.5 rounded-2xl border transition-all ${
+          <div className={`p-4 rounded-3xl clay-surface transition-all ${
             theme === 'focus'
-              ? 'bg-[#201c18] border-[#382e25]'
-              : 'bg-teal-50/60 dark:bg-slate-800/40 border-teal-100 dark:border-slate-700/60'
+              ? 'bg-gradient-to-br from-[#162624] to-[#111c1a] border border-teal-500/20 text-teal-100'
+              : 'bg-gradient-to-br from-teal-50/90 via-emerald-50/70 to-white text-slate-800 border border-teal-200/80 dark:from-slate-800/80 dark:to-slate-900/90 dark:border-white/10'
           }`}>
             <div className="flex items-center justify-between mb-1.5">
-              <span className="text-[11px] font-bold text-slate-400 theme-focus:text-amber-300/60 uppercase">
+              <span className="text-[10px] font-black uppercase tracking-wider text-teal-600 dark:text-teal-400 theme-focus:text-teal-300">
                 Next Eye Rest
               </span>
-              <Eye className="w-4 h-4 text-teal-500" />
+              <div className="w-6 h-6 rounded-full flex items-center justify-center clay-pill bg-teal-500/20">
+                <Eye className="w-3.5 h-3.5 text-teal-500" />
+              </div>
             </div>
             <div className="flex items-baseline gap-1">
-              <span className="text-2xl font-black font-display text-teal-500">
+              <span className="text-3xl font-black font-display text-teal-500 drop-shadow-xs">
                 {formatEyeTime(eyeSeconds)}
               </span>
             </div>
 
             {/* Quick Reset */}
-            <div className="mt-2.5 flex items-center justify-between">
-              <span className="text-[9px] font-medium text-slate-400">Rule: 20ft / 20sec</span>
+            <div className="mt-3 flex items-center justify-between">
+              <span className="text-[9px] font-black text-slate-400">20ft / 20sec</span>
               <button
                 onClick={resetEyeTimer}
-                className="p-1 rounded-lg bg-white dark:bg-slate-700 theme-focus:bg-[#14120f] border border-slate-200 dark:border-slate-600 text-slate-500 hover:text-teal-600"
+                className="w-8 h-8 rounded-xl flex items-center justify-center neuro-btn-convex text-teal-600 dark:text-teal-400 bg-white dark:bg-slate-800"
                 title="Restart 20min timer"
               >
-                <RotateCcw className="w-3 h-3" />
+                <RotateCcw className="w-3.5 h-3.5" />
               </button>
             </div>
           </div>
         </div>
 
-        {/* Posture Nudge */}
-        <div className={`p-2.5 rounded-xl border flex items-center gap-2.5 text-[11px] ${
+        {/* Posture Nudge - Glassmorphic Frosted Strip */}
+        <div className={`p-3 rounded-2xl glass-panel flex items-center gap-2.5 text-[11px] ${
           theme === 'focus'
-            ? 'bg-[#201c18] border-[#382e25] text-amber-200'
-            : 'bg-slate-50 dark:bg-slate-800/40 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'
+            ? 'border-amber-500/30 text-amber-200'
+            : 'border-white/40 text-slate-700 dark:text-slate-300'
         }`}>
           <Shield className="w-4 h-4 text-emerald-500 shrink-0" />
           <span>
-            <strong>Posture Check:</strong> Keep spine straight and screen at eye-level to maintain oxygen flow to the brain.
+            <strong className="font-extrabold text-slate-900 dark:text-white theme-focus:text-amber-100">Posture Ergonomics:</strong> Align cervical spine and elevate screen to eye-level.
           </span>
         </div>
       </div>

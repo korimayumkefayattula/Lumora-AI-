@@ -72,26 +72,26 @@ export const ExamCountdownWidget: React.FC = () => {
       }
     >
       <div className="space-y-4">
-        {/* Add Form if toggled */}
+        {/* Add Form if toggled - Glassmorphic / Neuromorphic Input Deck */}
         {isAdding && (
-          <form onSubmit={handleAddExam} className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 theme-focus:bg-[#201c18] border border-slate-200 dark:border-slate-700 space-y-2">
+          <form onSubmit={handleAddExam} className="p-3.5 rounded-2xl glass-panel border border-amber-500/30 space-y-2.5 animate-fade-in">
             <input
               type="text"
               placeholder="Exam Name (e.g. Organic Chemistry Final)"
               value={newSubject}
               onChange={(e) => setNewSubject(e.target.value)}
-              className="w-full p-2 text-xs bg-white dark:bg-slate-900 theme-focus:bg-[#14120f] border border-slate-200 dark:border-slate-700 rounded-xl outline-none"
+              className="w-full p-2.5 text-xs bg-white/60 dark:bg-slate-900/60 theme-focus:bg-[#14120f]/60 neuro-inset rounded-xl outline-none focus:ring-2 focus:ring-amber-500/50"
             />
             <div className="flex gap-2">
               <input
                 type="date"
                 value={newDate}
                 onChange={(e) => setNewDate(e.target.value)}
-                className="w-full p-2 text-xs bg-white dark:bg-slate-900 theme-focus:bg-[#14120f] border border-slate-200 dark:border-slate-700 rounded-xl outline-none"
+                className="w-full p-2.5 text-xs bg-white/60 dark:bg-slate-900/60 theme-focus:bg-[#14120f]/60 neuro-inset rounded-xl outline-none"
               />
               <button
                 type="submit"
-                className="px-4 py-2 bg-indigo-600 theme-focus:bg-amber-500 text-white rounded-xl text-xs font-bold shrink-0"
+                className="px-4 py-2.5 clay-btn bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black rounded-xl text-xs shrink-0"
               >
                 Save
               </button>
@@ -99,45 +99,45 @@ export const ExamCountdownWidget: React.FC = () => {
           </form>
         )}
 
-        {/* Exams List */}
+        {/* Exams List - Claymorphic 3D Cards */}
         <div className="space-y-3">
           {exams.map((exam) => {
             const daysLeft = calculateDaysLeft(exam.date);
             return (
               <div
                 key={exam.id}
-                className={`p-3.5 rounded-2xl border transition-all ${
+                className={`p-4 rounded-3xl clay-surface transition-all ${
                   theme === 'focus'
-                    ? 'bg-[#201c18] border-[#382e25]'
-                    : 'bg-slate-50/70 dark:bg-slate-800/40 border-slate-200/80 dark:border-slate-700/60'
+                    ? 'bg-gradient-to-br from-[#26201a] to-[#191512] text-amber-100 border border-amber-500/20'
+                    : 'bg-gradient-to-br from-white via-amber-50/20 to-slate-50 dark:from-slate-800/80 dark:to-slate-900/90 border border-white/60 dark:border-white/10'
                 }`}
               >
-                <div className="flex items-start justify-between gap-2 mb-2">
+                <div className="flex items-start justify-between gap-2 mb-3">
                   <div>
-                    <h4 className="font-bold text-xs text-slate-900 dark:text-white theme-focus:text-amber-100">
+                    <h4 className="font-extrabold text-sm text-slate-900 dark:text-white theme-focus:text-amber-100">
                       {exam.subject}
                     </h4>
-                    <p className="text-[10px] text-slate-400 theme-focus:text-amber-300/60 font-medium">
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400 theme-focus:text-amber-300/60 font-semibold mt-0.5">
                       Target: {exam.targetScore}
                     </p>
                   </div>
-                  <div className="text-right shrink-0">
-                    <span className="text-lg font-black font-display text-amber-500 block leading-none">
+                  <div className="px-3 py-1 rounded-2xl clay-pill bg-amber-500/15 border border-amber-500/30 text-right shrink-0">
+                    <span className="text-base font-black font-display text-amber-500 block leading-none">
                       {daysLeft}d
                     </span>
-                    <span className="text-[9px] uppercase font-bold text-slate-400">remaining</span>
+                    <span className="text-[8px] uppercase font-black tracking-wider text-amber-600 dark:text-amber-400">left</span>
                   </div>
                 </div>
 
-                {/* Readiness Progress Bar */}
-                <div className="space-y-1">
-                  <div className="flex items-center justify-between text-[10px] font-bold">
+                {/* Readiness Progress Bar in Neuromorphic Sunken Trench */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between text-[10px] font-bold px-0.5">
                     <span className="text-slate-400 theme-focus:text-amber-300/60">Syllabus Readiness</span>
-                    <span className="text-emerald-500 font-extrabold">{exam.readinessScore}%</span>
+                    <span className="text-emerald-500 font-black">{exam.readinessScore}%</span>
                   </div>
-                  <div className="w-full h-1.5 bg-slate-200 dark:bg-slate-700 theme-focus:bg-[#332b22] rounded-full overflow-hidden">
+                  <div className="w-full h-2 neuro-inset rounded-full p-0.5 overflow-hidden">
                     <div
-                      className="h-full bg-emerald-500 rounded-full"
+                      className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full transition-all duration-500 shadow-[0_0_6px_rgba(16,185,129,0.5)]"
                       style={{ width: `${exam.readinessScore}%` }}
                     />
                   </div>
@@ -147,13 +147,13 @@ export const ExamCountdownWidget: React.FC = () => {
           })}
         </div>
 
-        {/* Action Button */}
+        {/* Action Button - 3D Clay Button */}
         <button
           onClick={() => navigate('/student/mock-tests')}
-          className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-xs"
+          className="w-full py-3 rounded-2xl clay-btn bg-gradient-to-r from-amber-400 via-amber-500 to-orange-500 text-slate-950 font-black text-xs flex items-center justify-center gap-2 transition-all shadow-[0_10px_20px_rgba(245,158,11,0.3)]"
         >
           <span>Take AI Diagnostic Mock Test</span>
-          <ArrowRight className="w-3.5 h-3.5" />
+          <ArrowRight className="w-4 h-4" />
         </button>
       </div>
     </WidgetContainer>

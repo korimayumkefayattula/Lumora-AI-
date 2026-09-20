@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useAIProvider } from '../context/AIProviderContext';
 import { 
   ChatGPTConversationView, 
   ChatMessage 
@@ -57,7 +56,6 @@ const SUGGESTED_DOUBTS = [
 ];
 
 export default function AIDoubtSolver() {
-  const { provider, omniRouteUrl, omniRouteModel } = useAIProvider();
   const [selectedSubject, setSelectedSubject] = useState("All");
   const [targetLevel, setTargetLevel] = useState("Class 11-12");
   const [files, setFiles] = useState<UploadedFile[]>([]);
@@ -136,10 +134,7 @@ If you're asking ↳ how to derive the simple pendulum formula / solve complex r
           subject: selectedSubject !== 'All' ? selectedSubject : undefined,
           targetLevel,
           attachment: attachment ? { data: attachment.data, mimeType: attachment.mimeType } : undefined,
-          files: files.length > 0 ? files.map(f => ({ data: f.data, mimeType: f.mimeType, name: f.name })) : undefined,
-          provider,
-          omniRouteUrl,
-          omniRouteModel
+          files: files.length > 0 ? files.map(f => ({ data: f.data, mimeType: f.mimeType, name: f.name })) : undefined
         })
       });
 

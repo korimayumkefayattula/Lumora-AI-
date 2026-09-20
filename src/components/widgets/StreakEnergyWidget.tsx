@@ -36,103 +36,109 @@ export const StreakEnergyWidget: React.FC<StreakEnergyWidgetProps> = ({
       badgeColor="bg-amber-500/20 text-amber-500 font-black border border-amber-500/30"
     >
       <div className="space-y-4">
-        {/* Streak Main Stats Row */}
-        <div className="grid grid-cols-2 gap-3">
-          <div className={`p-3.5 rounded-2xl border transition-all ${
+        {/* Streak Main Stats Row - Claymorphic 3D Inflated Cards */}
+        <div className="grid grid-cols-2 gap-3.5">
+          <div className={`p-4 rounded-3xl clay-surface clay-card-interactive transition-all cursor-pointer ${
             theme === 'focus'
-              ? 'bg-[#201c18] border-[#382e25]'
+              ? 'bg-gradient-to-br from-[#26201a] to-[#1a1613] text-amber-100 border border-amber-500/20'
               : theme === 'dark'
-              ? 'bg-slate-800/60 border-slate-700/60'
-              : 'bg-gradient-to-br from-amber-50/70 to-orange-50/40 border-amber-200/60'
+              ? 'bg-gradient-to-br from-slate-800/90 to-slate-900/95 text-white border border-white/10'
+              : 'bg-gradient-to-br from-amber-50/90 via-orange-50/70 to-white text-slate-800 border border-amber-200/80'
           }`}>
             <div className="flex items-center justify-between mb-1.5">
-              <span className="text-[11px] font-bold text-slate-400 theme-focus:text-amber-300/70 uppercase tracking-wider">
+              <span className="text-[10px] font-black uppercase tracking-wider text-amber-500/90">
                 Current Streak
               </span>
-              <Flame className="w-4 h-4 text-amber-500 animate-bounce" />
+              <div className="w-6 h-6 rounded-full flex items-center justify-center clay-pill bg-amber-500/20">
+                <Flame className="w-3.5 h-3.5 text-amber-500 animate-bounce" />
+              </div>
             </div>
             <div className="flex items-baseline gap-1.5">
-              <span className="text-2xl font-black font-display tracking-tight text-amber-500">
+              <span className="text-3xl font-black font-display tracking-tight text-amber-500 drop-shadow-xs">
                 {streakDays}
               </span>
-              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 theme-focus:text-amber-200">
-                Days in a row
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 theme-focus:text-amber-200/80">
+                Days
               </span>
             </div>
-            <div className="mt-2 flex items-center gap-1 text-[10px] text-amber-600 dark:text-amber-400 font-bold">
-              <Sparkles className="w-3 h-3" />
-              <span>1.5x XP Boost Active</span>
+            <div className="mt-2.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black clay-pill bg-amber-500/15 text-amber-600 dark:text-amber-300 border border-amber-500/25">
+              <Sparkles className="w-2.5 h-2.5" />
+              <span>1.5x Multiplier</span>
             </div>
           </div>
 
-          {/* Cognitive Battery */}
-          <div className={`p-3.5 rounded-2xl border transition-all ${
+          {/* Cognitive Battery - Claymorphic 3D Card */}
+          <div className={`p-4 rounded-3xl clay-surface clay-card-interactive transition-all cursor-pointer ${
             theme === 'focus'
-              ? 'bg-[#201c18] border-[#382e25]'
+              ? 'bg-gradient-to-br from-[#1a2520] to-[#121a16] text-emerald-100 border border-emerald-500/20'
               : theme === 'dark'
-              ? 'bg-slate-800/60 border-slate-700/60'
-              : 'bg-gradient-to-br from-emerald-50/70 to-teal-50/40 border-emerald-200/60'
+              ? 'bg-gradient-to-br from-slate-800/90 to-slate-900/95 text-white border border-white/10'
+              : 'bg-gradient-to-br from-emerald-50/90 via-teal-50/70 to-white text-slate-800 border border-emerald-200/80'
           }`}>
             <div className="flex items-center justify-between mb-1.5">
-              <span className="text-[11px] font-bold text-slate-400 theme-focus:text-amber-300/70 uppercase tracking-wider">
-                Brain Energy
+              <span className="text-[10px] font-black uppercase tracking-wider text-emerald-500/90">
+                Brain Battery
               </span>
-              <BatteryCharging className="w-4 h-4 text-emerald-500" />
+              <div className="w-6 h-6 rounded-full flex items-center justify-center clay-pill bg-emerald-500/20">
+                <BatteryCharging className="w-3.5 h-3.5 text-emerald-500" />
+              </div>
             </div>
             <div className="flex items-baseline gap-1.5">
-              <span className="text-2xl font-black font-display tracking-tight text-emerald-500">
+              <span className="text-3xl font-black font-display tracking-tight text-emerald-500 drop-shadow-xs">
                 {energyLevel}%
               </span>
-              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 theme-focus:text-amber-200">
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 theme-focus:text-emerald-200/80">
                 Optimal
               </span>
             </div>
-            {/* Battery bar */}
-            <div className="mt-2 w-full h-1.5 bg-slate-200 dark:bg-slate-700 theme-focus:bg-[#332b22] rounded-full overflow-hidden">
+            {/* Neuromorphic Inset Sunken Battery Channel */}
+            <div className="mt-3 w-full h-2.5 neuro-inset rounded-full p-0.5 overflow-hidden relative">
               <div
-                className="h-full bg-emerald-500 rounded-full transition-all duration-500"
+                className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full transition-all duration-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"
                 style={{ width: `${energyLevel}%` }}
               />
             </div>
           </div>
         </div>
 
-        {/* Weekly Day Dots */}
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between text-[11px] font-bold text-slate-400 theme-focus:text-amber-300/60">
-            <span>Weekly Consistency</span>
-            <span className="text-indigo-500 theme-focus:text-amber-400">5 / 7 Days Done</span>
+        {/* Weekly Day Dots - Neuromorphic Tactile Buttons */}
+        <div className="space-y-2 pt-1">
+          <div className="flex items-center justify-between text-[11px] font-bold text-slate-400 theme-focus:text-amber-300/60 px-1">
+            <span>Weekly Momentum</span>
+            <span className="text-indigo-500 dark:text-rose-400 theme-focus:text-amber-400 font-extrabold">5 / 7 Days Active</span>
           </div>
-          <div className="grid grid-cols-7 gap-1.5">
+          <div className="grid grid-cols-7 gap-2">
             {weekDays.map((item, idx) => (
               <div
                 key={idx}
-                className={`py-2 rounded-xl text-center flex flex-col items-center justify-center border transition-all ${
+                className={`py-2.5 rounded-2xl text-center flex flex-col items-center justify-center transition-all ${
                   item.active
-                    ? 'bg-amber-500 text-slate-950 font-black border-amber-400 shadow-xs shadow-amber-500/20'
-                    : 'bg-slate-100 dark:bg-slate-800/40 theme-focus:bg-[#201c18] border-slate-200 dark:border-slate-800 theme-focus:border-[#382e25] text-slate-400'
+                    ? 'clay-btn bg-gradient-to-b from-amber-400 to-amber-500 text-slate-950 font-black border border-amber-300/40'
+                    : 'neuro-inset text-slate-400 dark:text-slate-500'
                 }`}
               >
-                <span className="text-[10px] uppercase font-bold">{item.day}</span>
+                <span className="text-[10px] uppercase font-black tracking-wider">{item.day}</span>
                 {item.active ? (
-                  <Flame className="w-3 h-3 mt-0.5" />
+                  <Flame className="w-3.5 h-3.5 mt-0.5 fill-slate-950" />
                 ) : (
-                  <div className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700 mt-1" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-slate-400/40 dark:bg-slate-600/60 mt-1.5" />
                 )}
               </div>
             ))}
           </div>
         </div>
 
-        {/* AI Insight Badge */}
-        <div className={`p-2.5 rounded-xl border flex items-center gap-2.5 text-xs ${
+        {/* AI Insight Badge - Glassmorphic Frosted Pill */}
+        <div className={`p-3 rounded-2xl glass-panel flex items-center gap-3 text-xs ${
           theme === 'focus'
-            ? 'bg-[#201c18] border-[#382e25] text-amber-200'
-            : 'bg-indigo-50/60 dark:bg-indigo-950/40 border-indigo-100 dark:border-indigo-900/40 text-indigo-900 dark:text-indigo-200'
+            ? 'border-amber-500/30 text-amber-200'
+            : 'border-white/20 text-slate-700 dark:text-slate-200'
         }`}>
-          <Clock className="w-4 h-4 text-indigo-500 theme-focus:text-amber-400 shrink-0" />
-          <span className="text-[11px] font-medium leading-tight">
-            <strong>Optimal Focus Window:</strong> 10:00 AM – 12:30 PM today. High cognitive endurance detected.
+          <div className="w-7 h-7 rounded-xl flex items-center justify-center clay-icon-box shrink-0 bg-indigo-500/20 text-indigo-500 dark:text-rose-400">
+            <Clock className="w-3.5 h-3.5" />
+          </div>
+          <span className="text-[11px] font-medium leading-relaxed">
+            <strong className="font-extrabold">Peak Cognitive Rhythm:</strong> 10:00 AM – 12:30 PM. High neural retention predicted.
           </span>
         </div>
       </div>

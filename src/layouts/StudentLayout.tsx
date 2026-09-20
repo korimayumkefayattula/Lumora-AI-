@@ -17,12 +17,18 @@ import { ExplainSimplyModal } from '../components/explain/ExplainSimplyModal';
 import { FloatingSidebar } from '../components/navigation/FloatingSidebar';
 import { ThemeSwitcher } from '../components/theme/ThemeSwitcher';
 import { useTheme } from '../context/ThemeContext';
+import { useAuth } from '../context/AuthContext';
+import { AuthModal } from '../components/AuthModal';
+import { LogIn, LogOut, User as UserIcon, Database, Check } from 'lucide-react';
 
 export default function StudentLayout() {
   const navigate = useNavigate();
   const { theme, isFocusMode } = useTheme();
+  const { user, dbUser, signOutUser } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isVoiceTutorOpen, setIsVoiceTutorOpen] = useState(false);
   const [isExplainModalOpen, setIsExplainModalOpen] = useState(false);
   const [explainSelectedText, setExplainSelectedText] = useState('');
@@ -137,22 +143,89 @@ export default function StudentLayout() {
             )}
           </div>
 
-          {/* User Profile Pill */}
-          <button 
-            onClick={() => navigate('/student/profile')}
-            className={`flex items-center gap-1.5 pl-1 pr-2.5 py-0.5 rounded-full border transition-all ${
-              theme === 'focus'
-                ? 'bg-[#201c18] border-[#443930] text-amber-100 hover:bg-[#2c2620]'
-                : 'bg-slate-100/80 dark:bg-[#141418] border-slate-200 dark:border-zinc-800 text-slate-800 dark:text-zinc-200 hover:bg-slate-200 dark:hover:bg-zinc-800'
-            }`}
-          >
-            <img 
-              src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80" 
-              alt="Alex Morgan" 
-              className="w-5.5 h-5.5 rounded-full object-cover border border-rose-500/80 theme-focus:border-amber-400"
-            />
-            <span className="text-[11px] font-bold hidden sm:inline">Alex</span>
-          </button>
+          {/* User Profile Pill & Authentication Menu */}
+          <div className="relative">
+            {user ? (
+              <button 
+                onClick={() => setShowUserMenu(!showUserMenu)}
+                className={`flex items-center gap-1.5 pl-1 pr-2.5 py-0.5 rounded-full border transition-all ${
+                  theme === 'focus'
+                    ? 'bg-[#201c18] border-[#443930] text-amber-100 hover:bg-[#2c2620]'
+                    : 'bg-slate-100/80 dark:bg-[#141418] border-slate-200 dark:border-zinc-800 text-slate-800 dark:text-zinc-200 hover:bg-slate-200 dark:hover:bg-zinc-800'
+                }`}
+                title="Account Menu"
+              >
+                {user.photoURL ? (
+                  <img 
+                    src={user.photoURL} 
+                    alt={user.displayName || "User"} 
+                    className="w-5.5 h-5.5 rounded-full object-cover border border-emerald-500/80"
+                  />
+                ) : (
+                  <div className="w-5.5 h-5.5 rounded-full bg-linear-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center text-[10px] font-bold">
+                    {(user.displayName || user.email || "U")[0].toUpperCase()}
+                  </div>
+                )}
+                <span className="text-[11px] font-bold hidden sm:inline truncate max-w-[80px]">
+                  {user.displayName?.split(' ')[0] || user.email?.split('@')[0] || "Student"}
+                </span>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" title="Cloud SQL Synced" />
+              </button>
+            ) : (
+              <button
+                onClick={() => setIsAuthModalOpen(true)}
+                className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold shadow-xs transition-colors"
+              >
+                <LogIn className="w-3.5 h-3.5" />
+                <span>Sign In</span>
+              </button>
+            )}
+
+            {/* User Dropdown */}
+            {showUserMenu && user && (
+              <div 
+                className={`absolute right-0 mt-2 w-64 rounded-2xl shadow-2xl p-3 z-50 space-y-2 animate-fade-in border backdrop-blur-xl ${
+                  theme === 'focus'
+                    ? 'bg-[#181512]/95 border-[#382e25] text-amber-100'
+                    : 'bg-[#141418]/95 border-zinc-800 text-slate-100'
+                }`}
+              >
+                <div className="border-b border-zinc-800 pb-2">
+                  <p className="font-bold text-xs text-white truncate">{user.displayName || "Student"}</p>
+                  <p className="text-[10px] text-zinc-400 truncate">{user.email}</p>
+                  <div className="mt-1.5 flex items-center gap-1.5 px-2 py-1 rounded-lg bg-emerald-950/40 border border-emerald-800/40 text-[10px] text-emerald-300">
+                    <Database className="w-3 h-3 text-emerald-400" />
+                    <span>Cloud SQL PostgreSQL: Active</span>
+                  </div>
+                </div>
+
+                <div className="space-y-1 text-xs">
+                  <button
+                    onClick={() => {
+                      setShowUserMenu(false);
+                      navigate('/student/profile');
+                    }}
+                    className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-zinc-800/70 text-left text-zinc-200 transition-colors"
+                  >
+                    <UserIcon className="w-3.5 h-3.5 text-zinc-400" />
+                    <span>View Student Profile</span>
+                  </button>
+
+                  <button
+                    onClick={async () => {
+                      setShowUserMenu(false);
+                      await signOutUser();
+                      navigate('/');
+                    }}
+                    className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-rose-950/40 text-left text-rose-400 transition-colors"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                    <span>Sign Out</span>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
@@ -212,6 +285,13 @@ export default function StudentLayout() {
         isOpen={isExplainModalOpen}
         onClose={() => setIsExplainModalOpen(false)}
         selectedText={explainSelectedText}
+      />
+
+      {/* Authentication Modal */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        initialMode="login"
       />
 
     </div>

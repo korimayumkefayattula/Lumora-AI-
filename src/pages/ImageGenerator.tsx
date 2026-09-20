@@ -54,11 +54,11 @@ interface GeneratedImageItem {
 const MODEL_OPTIONS = [
   { id: 'nano-banana-free', name: 'Lumora Flux HD Engine', desc: 'High-speed textbook & concept visualizer (Free & Fast)', badge: 'Recommended', icon: '⚡' },
   { id: 'vector-svg', name: 'Lumora Vector AI (Gemini 3.7)', desc: '100% precision annotated SVG diagrams with infinite zoom', badge: 'Vector SVG', icon: '📐' },
-  { id: 'imagen-3', name: 'Google Imagen 3.0 Ultra', desc: 'Studio photorealism & 4K educational macro rendering', badge: 'Imagen 3', icon: '🎨' },
-  { id: 'omniroute', name: 'OmniRoute Proxy', desc: 'Routes to your local OmniRoute proxy endpoint (:20128)', badge: 'Custom', icon: '🔌' }
+  { id: 'imagen-3', name: 'Google Imagen 3.0 Ultra', desc: 'Studio photorealism & 4K educational macro rendering', badge: 'Imagen 3', icon: '🎨' }
 ];
 
 const STYLE_OPTIONS = [
+  { id: 'neoclassical-allegory', name: 'Neoclassical Enlightenment Allegory', desc: 'Regnault & David oil painting with allegorical figures of Reason & Science', icon: Sparkles },
   { id: 'scientific-diagram', name: 'Scientific Diagram', desc: 'Crisp labeled callouts & white backdrop', icon: Compass },
   { id: 'textbook-illustration', name: 'Textbook Illustration', desc: 'Detailed educational print line art', icon: BookOpen },
   { id: '3d-render', name: '3D Scientific Render', desc: 'Photorealistic volumetric Octane lighting', icon: Layers },
@@ -78,6 +78,16 @@ const ASPECT_RATIOS = [
 ];
 
 const SUBJECT_PRESETS = [
+  {
+    category: 'Enlightenment & Allegories',
+    icon: Sparkles,
+    items: [
+      { label: 'Allegory of Reason, Truth & Geometry', prompt: 'A magnificent 1793 French Enlightenment neoclassical oil painting in the style of Jean-Baptiste Regnault and Jacques-Louis David. Allegorical figures representing Reason with a level plumb-line, winged Genius of Knowledge with a flame atop the head, dramatic chiaroscuro lighting, neoclassical drapery, celestial clouds and golden heavenly light, oil on canvas masterwork.' },
+      { label: 'Apotheosis of Isaac Newton & Gravitation', prompt: 'Neoclassical historical allegory depicting Sir Isaac Newton receiving the divine light of mathematical truth, surrounded by allegorical muses of Geometry, Calculus and Celestial Mechanics, celestial planetary orbs in the background, dramatic museum canvas texture.' },
+      { label: 'The Genius of Mathematics Unveiling Nature', prompt: 'Grand classical allegory of a winged youth holding a glowing compass and parchment unveiling the veiled statue of Nature, radiant golden atmosphere, Roman architectural columns, classical oil painting.' },
+      { label: 'The Temple of Chemistry & Elements', prompt: 'Neoclassical allegorical scene in a grand marble temple where figures of Lavoisier and Mendeleev arrange the elements under the watchful eye of Minerva, atmospheric smoky braziers, rich chiaroscuro.' }
+    ]
+  },
   {
     category: 'Biology',
     icon: Dna,

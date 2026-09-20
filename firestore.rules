@@ -1,0 +1,25 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Student projects auto-saved every 30 seconds
+    match /student_projects/{projectId} {
+      allow read, write: if true;
+    }
+
+    // Published sites with live preview links
+    match /published_sites/{siteId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // Real-time collaborative shared workspaces
+    match /shared_workspaces/{roomId} {
+      allow read, write: if true;
+    }
+
+    // Default fallback
+    match /{document=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}

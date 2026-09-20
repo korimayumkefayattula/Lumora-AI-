@@ -29,7 +29,8 @@ import {
   Eye,
   Shield,
   Zap,
-  Flame
+  Flame,
+  Globe
 } from 'lucide-react';
 import LumoraLogo from '../LumoraLogo';
 import { ThemeSwitcher } from '../theme/ThemeSwitcher';
@@ -55,6 +56,7 @@ export const NAV_GROUPS: NavGroup[] = [
     categoryKey: 'core',
     items: [
       { name: 'Dashboard', path: '/student', icon: Sparkles },
+      { name: 'AI Faculty (1k+)', path: '/student/mentors', icon: Users, badge: '1000+' },
       { name: 'Concept Explorer', path: '/student/concept-explorer', icon: Compass, badge: 'New' },
       { name: 'AI Homework Helper', path: '/student/homework-helper', icon: Camera, badge: 'AI' },
       { name: 'Explain Simply AI', path: '/student/explain-simply', icon: Sparkles },
@@ -67,6 +69,9 @@ export const NAV_GROUPS: NavGroup[] = [
     groupName: 'Smart Study Generators',
     categoryKey: 'generators',
     items: [
+      { name: 'Memory Tricks', path: '/student/memory-tricks', icon: Brain, badge: 'Hacks' },
+      { name: 'Student Web Builder', path: '/student/web-builder', icon: Globe, badge: 'Lovable' },
+      { name: 'Scholar Quotes', path: '/student/quotes', icon: Sparkles },
       { name: 'AI Summary', path: '/student/summary', icon: FileCheck },
       { name: 'AI Notes', path: '/student/notes', icon: FileText },
       { name: 'Flashcards', path: '/student/flashcards', icon: Layers },
@@ -92,7 +97,9 @@ export const NAV_GROUPS: NavGroup[] = [
     groupName: 'Analytics & Community',
     categoryKey: 'growth',
     items: [
-      { name: 'Analytics', path: '/student/analytics', icon: BarChart3 },
+      { name: 'Analytics & PDF', path: '/student/analytics', icon: BarChart3 },
+      { name: 'Subject Arenas', path: '/student/competitions', icon: Trophy, badge: 'Live' },
+      { name: 'Pro Pricing', path: '/student/pricing', icon: Zap, badge: 'Pro' },
       { name: 'Goals', path: '/student/goals', icon: Target },
       { name: 'Community', path: '/student/community', icon: Users },
       { name: 'Leaderboard', path: '/student/leaderboard', icon: Trophy }

@@ -285,9 +285,9 @@ export default function Landing() {
                 LUMORA<span className="text-blue-500">AI</span>
               </span>
             </Link>
-            <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-cyan-950/80 border border-cyan-700/40 text-cyan-300 text-[9px] font-bold tracking-wide">
-              <Sparkles className="w-2.5 h-2.5 text-cyan-400" />
-              <span>OmniRoute</span>
+            <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-950/80 border border-blue-700/40 text-blue-300 text-[9px] font-bold tracking-wide">
+              <Sparkles className="w-2.5 h-2.5 text-blue-400" />
+              <span>Gemini 2.5 Flash</span>
             </span>
           </div>
 
@@ -414,27 +414,68 @@ export default function Landing() {
 
               {/* Main Headline */}
               <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight text-white leading-[1.05]">
-                Learn Smarter <br />
-                <span className="text-white">Grow Faster</span>
+                Learn Smarter. <br />
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-400 via-rose-300 to-cyan-300">Understand Faster.</span> <br />
+                <span className="text-white">Achieve More.</span>
               </h1>
+
+              {/* Supporting Message */}
+              <p className="text-sm sm:text-base text-slate-300 leading-relaxed max-w-xl">
+                AI-powered workspace for studying, practicing, revising and exam preparation. Tailored for Class 10 & 12 students to achieve genuine concept mastery.
+              </p>
 
               {/* Action Buttons */}
               <div className="flex flex-wrap items-center gap-3 pt-2">
                 <button 
                   onClick={() => navigate('/student')} 
-                  className="px-6 py-3.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-extrabold flex items-center gap-2 shadow-xl shadow-rose-600/25 transition-all active:scale-95 group"
+                  className="px-8 py-4 rounded-xl bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-500 hover:to-rose-600 text-white text-sm font-black flex items-center gap-2.5 shadow-2xl shadow-rose-600/40 transition-all active:scale-95 group"
                 >
-                  <span>Get Started Free</span>
+                  <span>Start Learning Free</span>
                   <ArrowUpRight className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                 </button>
 
                 <button 
                   onClick={() => navigate('/student/subjects')} 
-                  className="px-6 py-3.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-200 border border-slate-700/80 text-xs font-extrabold flex items-center gap-2 transition-all"
+                  className="px-6 py-4 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-200 border border-slate-700/80 text-xs font-extrabold flex items-center gap-2 transition-all"
                 >
-                  <span>Explore Courses</span>
+                  <span>Explore Curriculum</span>
                   <ArrowUpRight className="w-4 h-4 text-slate-400" />
                 </button>
+              </div>
+
+              {/* Master Learning Loop Strip (PRD Page 2 & 20) */}
+              <div className="p-3.5 rounded-2xl bg-slate-900/80 border border-slate-800 backdrop-blur-md space-y-2">
+                <div className="flex items-center justify-between text-[11px] font-bold text-slate-400">
+                  <span className="flex items-center gap-1.5 text-cyan-400 font-extrabold uppercase tracking-wider">
+                    <Sparkles className="w-3.5 h-3.5" />
+                    99/100 Master Learning Loop
+                  </span>
+                  <span className="hidden sm:inline text-[10px] text-slate-500">Continuous cognitive feedback</span>
+                </div>
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-[11px]">
+                  {[
+                    { label: 'Plan', path: '/student/study-planner' },
+                    { label: 'Learn', path: '/student/subjects' },
+                    { label: 'Understand', path: '/student/concept-explorer' },
+                    { label: 'Practice', path: '/student/homework-helper' },
+                    { label: 'Test', path: '/student/mock-tests' },
+                    { label: 'Analyze', path: '/student/analytics' },
+                    { label: 'Revise', path: '/student/revision' },
+                    { label: 'Improve', path: '/student' },
+                  ].map((step, idx, arr) => (
+                    <React.Fragment key={step.label}>
+                      <button
+                        onClick={() => navigate(step.path)}
+                        className="px-2.5 py-1 rounded-lg bg-slate-800/90 hover:bg-rose-600 hover:text-white text-slate-300 font-bold transition-all shrink-0 active:scale-95"
+                      >
+                        {step.label}
+                      </button>
+                      {idx < arr.length - 1 && (
+                        <span className="text-slate-600 font-black shrink-0">→</span>
+                      )}
+                    </React.Fragment>
+                  ))}
+                </div>
               </div>
 
               {/* Partner Logos Bar (Inspired by Mockup) */}
@@ -446,11 +487,11 @@ export default function Landing() {
                   </div>
                   <div className="flex items-center gap-1.5 text-xs font-black tracking-widest uppercase font-mono text-slate-300">
                     <Cpu className="w-4 h-4 text-cyan-400" />
-                    <span>GEMINI</span>
+                    <span>GEMINI 2.5</span>
                   </div>
                   <div className="flex items-center gap-1.5 text-xs font-black tracking-widest uppercase font-mono text-slate-300">
                     <Zap className="w-4 h-4 text-amber-400" />
-                    <span>OMNIROUTE</span>
+                    <span>REALTIME AI</span>
                   </div>
                   <div className="flex items-center gap-1.5 text-xs font-black tracking-widest uppercase font-mono text-slate-300">
                     <Brain className="w-4 h-4 text-purple-400" />
@@ -867,7 +908,7 @@ export default function Landing() {
                 </div>
                 <h3 className="text-2xl font-black text-white">Ask Any Question in Real Time</h3>
               </div>
-              <span className="text-xs text-slate-400">Powered by Gemini 2.5 Flash & OmniRoute</span>
+              <span className="text-xs text-slate-400">Powered by Gemini 2.5 Flash</span>
             </div>
 
             {/* Prompt Input Form */}

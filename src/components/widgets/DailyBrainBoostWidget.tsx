@@ -55,14 +55,14 @@ export const DailyBrainBoostWidget: React.FC = () => {
       badgeColor="bg-purple-500/20 text-purple-600 dark:text-purple-300 font-bold border border-purple-500/30"
     >
       <div className="space-y-4">
-        {/* Concept Card */}
-        <div className={`p-4 rounded-2xl border transition-all ${
+        {/* Concept Card - Glassmorphic Frosted Plaque with Clay Accent */}
+        <div className={`p-4 rounded-3xl glass-panel relative overflow-hidden transition-all ${
           theme === 'focus'
-            ? 'bg-[#201c18] border-[#382e25]'
-            : 'bg-gradient-to-br from-purple-50/60 to-indigo-50/40 dark:bg-slate-800/60 border-purple-100 dark:border-slate-700/70'
+            ? 'border-amber-500/30'
+            : 'border-purple-200/50 dark:border-purple-900/30 bg-gradient-to-br from-purple-50/60 to-white/40 dark:from-purple-950/20 dark:to-slate-900/40'
         }`}>
-          <div className="flex items-center justify-between mb-1.5">
-            <span className="text-[10px] font-extrabold uppercase tracking-wider text-purple-600 dark:text-purple-400 theme-focus:text-amber-400">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full clay-pill bg-purple-500/20 text-purple-600 dark:text-purple-300 theme-focus:text-amber-400 border border-purple-500/30">
               {concept.tag}
             </span>
             <button
@@ -73,7 +73,7 @@ export const DailyBrainBoostWidget: React.FC = () => {
                   window.speechSynthesis.speak(utterance);
                 }
               }}
-              className="p-1 rounded-md text-slate-400 hover:text-purple-600 dark:hover:text-purple-300 transition-colors"
+              className="w-7 h-7 rounded-xl flex items-center justify-center neuro-btn-convex text-purple-600 dark:text-purple-300 hover:scale-105 active:scale-95 transition-all"
               title="Listen to summary"
             >
               <Volume2 className="w-3.5 h-3.5" />
@@ -87,25 +87,27 @@ export const DailyBrainBoostWidget: React.FC = () => {
           </p>
         </div>
 
-        {/* Micro Quiz */}
-        <div className="space-y-2">
-          <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 theme-focus:text-amber-100">
-            <HelpCircle className="w-3.5 h-3.5 text-indigo-500 theme-focus:text-amber-400" />
+        {/* Micro Quiz with Neuromorphic Option Tiles */}
+        <div className="space-y-2.5">
+          <div className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300 theme-focus:text-amber-100 px-1">
+            <HelpCircle className="w-3.5 h-3.5 text-rose-500 theme-focus:text-amber-400" />
             <span>Check your understanding: {concept.question}</span>
           </div>
 
-          <div className="grid grid-cols-1 gap-1.5">
+          <div className="grid grid-cols-1 gap-2">
             {concept.options.map((opt, idx) => {
               const isSelected = selectedOption === idx;
               const isCorrect = idx === concept.correctIndex;
 
-              let style = 'bg-slate-50 dark:bg-slate-800/40 border-slate-200 dark:border-slate-700 hover:border-indigo-300 theme-focus:bg-[#201c18] theme-focus:border-[#382e25]';
+              let style = 'neuro-btn-convex text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white bg-white/50 dark:bg-slate-800/50';
 
               if (hasAnswered) {
                 if (isCorrect) {
-                  style = 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500 text-emerald-900 dark:text-emerald-200 font-bold';
+                  style = 'clay-surface bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-black border border-emerald-400/40 shadow-[0_8px_16px_rgba(16,185,129,0.3)]';
                 } else if (isSelected && !isCorrect) {
-                  style = 'bg-rose-50 dark:bg-rose-950/40 border-rose-500 text-rose-900 dark:text-rose-200 font-bold';
+                  style = 'neuro-inset bg-rose-500/20 border border-rose-500/60 text-rose-600 dark:text-rose-200 font-bold';
+                } else {
+                  style = 'opacity-50 neuro-inset text-slate-400';
                 }
               }
 
@@ -114,10 +116,10 @@ export const DailyBrainBoostWidget: React.FC = () => {
                   key={idx}
                   onClick={() => handleSelect(idx)}
                   disabled={hasAnswered}
-                  className={`w-full p-2.5 rounded-xl border text-left text-xs transition-all flex items-center justify-between ${style}`}
+                  className={`w-full p-3 rounded-2xl text-left text-xs transition-all flex items-center justify-between ${style}`}
                 >
                   <span className="leading-snug">{opt}</span>
-                  {hasAnswered && isCorrect && <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 ml-2" />}
+                  {hasAnswered && isCorrect && <CheckCircle2 className="w-4 h-4 text-white shrink-0 ml-2 drop-shadow-xs" />}
                   {hasAnswered && isSelected && !isCorrect && <XCircle className="w-4 h-4 text-rose-500 shrink-0 ml-2" />}
                 </button>
               );
@@ -125,23 +127,23 @@ export const DailyBrainBoostWidget: React.FC = () => {
           </div>
 
           {hasAnswered && (
-            <div className={`p-2.5 rounded-xl border text-[11px] leading-relaxed animate-fade-in ${
+            <div className={`p-3 rounded-2xl glass-panel text-[11px] leading-relaxed animate-fade-in ${
               selectedOption === concept.correctIndex
-                ? 'bg-emerald-50/80 dark:bg-emerald-950/30 border-emerald-500/30 text-emerald-800 dark:text-emerald-200'
-                : 'bg-amber-50/80 dark:bg-amber-950/30 border-amber-500/30 text-amber-800 dark:text-amber-200'
+                ? 'border-emerald-500/40 text-emerald-800 dark:text-emerald-200'
+                : 'border-amber-500/40 text-amber-800 dark:text-amber-200'
             }`}>
-              <strong>Insight:</strong> {concept.funFact}
+              <strong className="font-extrabold">Neural Insight:</strong> {concept.funFact}
             </div>
           )}
         </div>
 
-        {/* Deep Dive Action */}
+        {/* Deep Dive Action - 3D Clay Button */}
         <button
           onClick={() => navigate('/student/concept-explorer')}
-          className="w-full py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 theme-focus:bg-amber-600 theme-focus:hover:bg-amber-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-xs"
+          className="w-full py-3 rounded-2xl clay-btn bg-gradient-to-r from-purple-600 via-indigo-600 to-rose-600 text-white font-extrabold text-xs flex items-center justify-center gap-2 transition-all shadow-[0_10px_20px_rgba(147,51,234,0.3)]"
         >
           <span>Explore in 3D Concept Explorer</span>
-          <ArrowRight className="w-3.5 h-3.5" />
+          <ArrowRight className="w-4 h-4" />
         </button>
       </div>
     </WidgetContainer>

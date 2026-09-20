@@ -1,7 +1,8 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "./context/ThemeContext";
-import { AIProviderProvider } from "./context/AIProviderContext";
+import { AuthProvider } from "./context/AuthContext";
+import { StudentProfileProvider } from "./context/StudentProfileContext";
 import StudentDashboard from "./pages/StudentDashboard";
 import Landing from "./pages/Landing";
 import ParentDashboard from "./pages/ParentDashboard";
@@ -32,52 +33,69 @@ import SettingsPage from "./pages/SettingsPage";
 import ExplainSimplyWorkspace from "./pages/ExplainSimplyWorkspace";
 import { HomeworkHelperPage } from "./pages/HomeworkHelperPage";
 import { ConceptExplorerPage } from "./pages/ConceptExplorerPage";
+import AIFacultyDirectoryPage from "./pages/AIFacultyDirectoryPage";
+import ScholarQuotesPage from "./pages/ScholarQuotesPage";
+import MemoryTricksPage from "./pages/MemoryTricksPage";
+import CompetitionsPage from "./pages/CompetitionsPage";
+import PricingPage from "./pages/PricingPage";
+import StudentWebBuilderPage from "./pages/StudentWebBuilderPage";
 
 export default function App() {
   return (
     <ThemeProvider>
-      <AIProviderProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Landing />} />
-            
-            {/* Student App Routes */}
-            <Route path="/student" element={<StudentLayout />}>
-              <Route index element={<StudentDashboard />} />
-              <Route path="concept-explorer" element={<ConceptExplorerPage />} />
-              <Route path="tutor" element={<AITutor />} />
-              <Route path="homework-helper" element={<HomeworkHelperPage />} />
-              <Route path="explain-simply" element={<ExplainSimplyWorkspace />} />
-              <Route path="doubt-solver" element={<AIDoubtSolver />} />
-              <Route path="image-generator" element={<ImageGenerator />} />
-              <Route path="infographic-generator" element={<InfographicGenerator />} />
-              <Route path="pdf-learning" element={<PDFLearning />} />
-              <Route path="summary" element={<AISummaryPage />} />
-              <Route path="notes" element={<AINotesPage />} />
-              <Route path="quiz" element={<QuizGenerator />} />
-              <Route path="flashcards" element={<FlashcardGenerator />} />
-              <Route path="mock-tests" element={<MockTestsPage />} />
-              <Route path="study-planner" element={<StudyPlannerPage />} />
-              <Route path="calendar" element={<CalendarPage />} />
-              <Route path="mind-map" element={<MindMapPage />} />
-              <Route path="subjects" element={<SubjectsPage />} />
-              <Route path="pyq" element={<PYQPage />} />
-              <Route path="revision" element={<RevisionCenterPage />} />
-              <Route path="analytics" element={<ProgressAnalyticsPage />} />
-              <Route path="goals" element={<GoalsPage />} />
-              <Route path="community" element={<CommunityPage />} />
-              <Route path="leaderboard" element={<LeaderboardPage />} />
-              <Route path="profile" element={<ProfilePage />} />
-              <Route path="settings" element={<SettingsPage />} />
-            </Route>
-            
-            <Route path="/parent" element={<ParentDashboard />} />
-            <Route path="/admin" element={<AdminPanel />} />
-            
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </BrowserRouter>
-      </AIProviderProvider>
+      <AuthProvider>
+        <StudentProfileProvider>
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Landing />} />
+              
+              {/* Student App Routes */}
+              <Route path="/student" element={<StudentLayout />}>
+                <Route index element={<StudentDashboard />} />
+                <Route path="concept-explorer" element={<ConceptExplorerPage />} />
+                <Route path="tutor" element={<AITutor />} />
+                <Route path="homework-helper" element={<HomeworkHelperPage />} />
+                <Route path="explain-simply" element={<ExplainSimplyWorkspace />} />
+                <Route path="doubt-solver" element={<AIDoubtSolver />} />
+                <Route path="image-generator" element={<ImageGenerator />} />
+                <Route path="infographic-generator" element={<InfographicGenerator />} />
+                <Route path="pdf-learning" element={<PDFLearning />} />
+                <Route path="summary" element={<AISummaryPage />} />
+                <Route path="notes" element={<AINotesPage />} />
+                <Route path="quiz" element={<QuizGenerator />} />
+                <Route path="flashcards" element={<FlashcardGenerator />} />
+                <Route path="mock-tests" element={<MockTestsPage />} />
+                <Route path="study-planner" element={<StudyPlannerPage />} />
+                <Route path="calendar" element={<CalendarPage />} />
+                <Route path="mind-map" element={<MindMapPage />} />
+                <Route path="subjects" element={<SubjectsPage />} />
+                <Route path="pyq" element={<PYQPage />} />
+                <Route path="revision" element={<RevisionCenterPage />} />
+                <Route path="analytics" element={<ProgressAnalyticsPage />} />
+                <Route path="mentors" element={<AIFacultyDirectoryPage />} />
+                <Route path="ai-faculty" element={<AIFacultyDirectoryPage />} />
+                <Route path="quotes" element={<ScholarQuotesPage />} />
+                <Route path="memory-tricks" element={<MemoryTricksPage />} />
+                <Route path="web-builder" element={<StudentWebBuilderPage />} />
+                <Route path="website-builder" element={<StudentWebBuilderPage />} />
+                <Route path="competitions" element={<CompetitionsPage />} />
+                <Route path="pricing" element={<PricingPage />} />
+                <Route path="goals" element={<GoalsPage />} />
+                <Route path="community" element={<CommunityPage />} />
+                <Route path="leaderboard" element={<LeaderboardPage />} />
+                <Route path="profile" element={<ProfilePage />} />
+                <Route path="settings" element={<SettingsPage />} />
+              </Route>
+              
+              <Route path="/pricing" element={<PricingPage />} />
+              <Route path="/parent" element={<ParentDashboard />} />
+              <Route path="/admin" element={<AdminPanel />} />
+              
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </BrowserRouter>
+        </StudentProfileProvider>
+      </AuthProvider>
     </ThemeProvider>
   );
 }

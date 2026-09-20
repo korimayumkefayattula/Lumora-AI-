@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, Mail, Lock, User, ArrowRight, CheckCircle2, Sparkles, AlertCircle, RefreshCw, GraduationCap, ShieldCheck } from 'lucide-react';
+import { X, Mail, Lock, User, ArrowRight, CheckCircle2, Sparkles, AlertCircle, RefreshCw, GraduationCap, ShieldCheck, Database } from 'lucide-react';
 import LumoraLogo from './LumoraLogo';
+import { PersonalizedOnboardingModal } from './onboarding/PersonalizedOnboardingModal';
+import { useAuth } from '../context/AuthContext';
 
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
-  initialMode?: 'login' | 'signup' | 'forgot';
+  initialMode?: 'login' | 'signup' | 'forgot' | 'onboarding';
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({
@@ -30,22 +32,28 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   // UI States
   const [loading, setLoading] = useState(false);
+  const { signInWithGoogle } = useAuth();
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
   if (!isOpen) return null;
 
-  const handleGoogleLogin = () => {
+  const handleGoogleLogin = async () => {
     setLoading(true);
     setError('');
-    setTimeout(() => {
-      setLoading(false);
-      setSuccessMsg('Google Authentication Successful!');
+    try {
+      await signInWithGoogle();
+      setSuccessMsg('Authenticated with Google & Synchronized to Cloud SQL!');
       setTimeout(() => {
-        setMode('onboarding');
-        setSuccessMsg('');
-      }, 800);
-    }, 1200);
+        onClose();
+        navigate('/student');
+      }, 700);
+    } catch (err: any) {
+      console.error('Google Sign-in failed:', err);
+      setError(err?.message || 'Failed to sign in with Google. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSignup = (e: React.FormEvent) => {
@@ -108,6 +116,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }, 800);
   };
 
+  if (mode === 'onboarding') {
+    return (
+      <PersonalizedOnboardingModal
+        isOpen={isOpen}
+        onClose={onClose}
+        initialName={name}
+      />
+    );
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm animate-fade-in">
       <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 w-full max-w-md rounded-2xl shadow-2xl p-6 md:p-8 relative overflow-hidden">
@@ -127,7 +145,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             {mode === 'signup' && 'Create your free account to start learning with AI'}
             {mode === 'login' && 'Welcome back! Log in to continue your streak'}
             {mode === 'forgot' && 'Reset your password securely'}
-            {mode === 'onboarding' && 'Customize your AI study preferences'}
           </p>
         </div>
 
@@ -356,62 +373,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               </button>
             </div>
           </form>
-        )}
-
-        {/* MODE: ONBOARDING */}
-        {mode === 'onboarding' && (
-          <div className="space-y-4">
-            <div className="space-y-3">
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Select Grade/Class</label>
-                <select 
-                  value={classGrade}
-                  onChange={(e) => setClassGrade(e.target.value)}
-                  className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 rounded-xl text-xs font-semibold focus:outline-none dark:text-white"
-                >
-                  <option>Class 10</option>
-                  <option>Class 11</option>
-                  <option>Class 12</option>
-                  <option>Undergraduate / College</option>
-                  <option>Competitive Exams (NEET / JEE / SAT)</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Educational Board</label>
-                <select 
-                  value={board}
-                  onChange={(e) => setBoard(e.target.value)}
-                  className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 rounded-xl text-xs font-semibold focus:outline-none dark:text-white"
-                >
-                  <option>CBSE</option>
-                  <option>ICSE / ISC</option>
-                  <option>State Board</option>
-                  <option>IB / Cambridge</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Primary Goal</label>
-                <input 
-                  type="text"
-                  value={targetExam}
-                  onChange={(e) => setTargetExam(e.target.value)}
-                  placeholder="e.g. Score 95%+ in Board Exams"
-                  className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 rounded-xl text-xs focus:outline-none dark:text-white font-medium"
-                />
-              </div>
-            </div>
-
-            <button 
-              onClick={handleFinishOnboarding}
-              disabled={loading}
-              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl text-xs shadow-lg shadow-emerald-500/25 flex items-center justify-center gap-2"
-            >
-              {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-              <span>Enter Lumora AI Workspace</span>
-            </button>
-          </div>
         )}
 
       </div>

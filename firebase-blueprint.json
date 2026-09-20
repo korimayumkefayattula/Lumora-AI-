@@ -1,0 +1,77 @@
+{
+  "entities": {
+    "StudentProject": {
+      "title": "StudentProject",
+      "description": "Student web builder project code and workspace state",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "html": { "type": "string" },
+        "css": { "type": "string" },
+        "js": { "type": "string" },
+        "version": { "type": "number" },
+        "studentHandle": { "type": "string" },
+        "studentEmail": { "type": "string" },
+        "updatedAt": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "title", "html", "updatedAt"]
+    },
+    "PublishedSite": {
+      "title": "PublishedSite",
+      "description": "Published student websites for Firebase Hosting integration",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "slug": { "type": "string" },
+        "html": { "type": "string" },
+        "css": { "type": "string" },
+        "js": { "type": "string" },
+        "publishedUrl": { "type": "string" },
+        "studentEmail": { "type": "string" },
+        "studentName": { "type": "string" },
+        "publishedAt": { "type": "string" },
+        "views": { "type": "number" }
+      },
+      "required": ["id", "title", "publishedUrl", "publishedAt"]
+    },
+    "SharedWorkspaceRoom": {
+      "title": "SharedWorkspaceRoom",
+      "description": "Multiplayer real-time co-editing room for student projects",
+      "type": "object",
+      "properties": {
+        "roomId": { "type": "string" },
+        "roomName": { "type": "string" },
+        "projectId": { "type": "string" },
+        "activeTab": { "type": "string" },
+        "html": { "type": "string" },
+        "css": { "type": "string" },
+        "js": { "type": "string" },
+        "lastEditedBy": { "type": "string" },
+        "lastEditedAt": { "type": "string" },
+        "collaborators": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "required": ["roomId", "projectId", "lastEditedAt"]
+    }
+  },
+  "firestore": {
+    "/student_projects/{projectId}": {
+      "schema": "StudentProject",
+      "description": "Stores user web builder projects and 30-second auto-save state."
+    },
+    "/published_sites/{siteId}": {
+      "schema": "PublishedSite",
+      "description": "Stores published sites with live preview links."
+    },
+    "/shared_workspaces/{roomId}": {
+      "schema": "SharedWorkspaceRoom",
+      "description": "Real-time collaborative workspace state for co-editing."
+    }
+  }
+}

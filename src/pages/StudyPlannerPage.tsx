@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
 import { Calendar as CalendarIcon, Clock, CheckCircle2, Circle, Plus, Sparkles, RefreshCw, Trash2, Edit3, Target, BookOpen } from 'lucide-react';
-import { useAIProvider } from '../context/AIProviderContext';
 import { StudyTask } from '../types';
 
 export default function StudyPlannerPage() {
-  const { provider, omniRouteUrl, omniRouteModel } = useAIProvider();
   const [examDate, setExamDate] = useState('2026-03-15');
   const [dailyHours, setDailyHours] = useState(5);
   const [weakSubjects, setWeakSubjects] = useState('Physics Numerical, Organic Reactions');
@@ -87,10 +85,7 @@ export default function StudyPlannerPage() {
           timeAvailable: dailyHours,
           topicKeywords: weakSubjects,
           difficulty: "intermediate",
-          notes: `Target Exam Date: ${examDate}`,
-          provider,
-          omniRouteUrl,
-          omniRouteModel
+          notes: `Target Exam Date: ${examDate}`
         })
       });
 

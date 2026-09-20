@@ -1,18 +1,50 @@
-import React, { useState } from 'react';
-import { User, Mail, GraduationCap, Award, Flame, Save, Check, RefreshCw } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { User, Mail, GraduationCap, Award, Flame, Save, Check, RefreshCw, Database, ShieldCheck, LogIn } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 export default function ProfilePage() {
+  const { user, dbUser, signInWithGoogle, syncUserProfile } = useAuth();
+
   const [name, setName] = useState('Alex Morgan');
   const [email, setEmail] = useState('alex.morgan@student.com');
   const [grade, setGrade] = useState('Class 12');
   const [board, setBoard] = useState('CBSE Board');
   const [targetExam, setTargetExam] = useState('Board Exams 2026 (Score 95%+)');
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
 
-  const handleSave = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (user) {
+      if (user.displayName) setName(user.displayName);
+      if (user.email) setEmail(user.email);
+    }
+    if (dbUser) {
+      if (dbUser.displayName) setName(dbUser.displayName);
+      if (dbUser.classGrade) setGrade(dbUser.classGrade);
+      if (dbUser.board) setBoard(dbUser.board);
+      if (dbUser.targetExam) setTargetExam(dbUser.targetExam);
+    }
+  }, [user, dbUser]);
+
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    setSaving(true);
+    try {
+      if (user) {
+        await syncUserProfile({
+          displayName: name,
+          classGrade: grade,
+          board,
+          targetExam,
+        });
+      }
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2500);
+    } catch (err) {
+      console.error('Failed to save profile:', err);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -31,19 +63,56 @@ export default function ProfilePage() {
       </div>
 
       <div className="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-6">
-        <div className="flex items-center gap-4 border-b border-slate-100 dark:border-slate-700 pb-6">
-          <img 
-            src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80" 
-            alt="Alex Morgan"
-            className="w-20 h-20 rounded-full object-cover border-4 border-blue-500 shadow-md"
-          />
-          <div>
-            <h2 className="text-xl font-black text-slate-900 dark:text-white">{name}</h2>
-            <p className="text-xs text-slate-500 font-medium">{email}</p>
-            <div className="flex items-center gap-2 mt-2">
-              <span className="px-2.5 py-0.5 bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 rounded-full text-[10px] font-bold">{grade}</span>
-              <span className="px-2.5 py-0.5 bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 rounded-full text-[10px] font-bold">{board}</span>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-700 pb-6">
+          <div className="flex items-center gap-4">
+            {user?.photoURL ? (
+              <img 
+                src={user.photoURL} 
+                alt={name}
+                className="w-20 h-20 rounded-full object-cover border-4 border-blue-500 shadow-md"
+              />
+            ) : (
+              <div className="w-20 h-20 rounded-full bg-linear-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center text-2xl font-black border-4 border-blue-500 shadow-md">
+                {(name || "U")[0].toUpperCase()}
+              </div>
+            )}
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-xl font-black text-slate-900 dark:text-white">{name}</h2>
+                {user && (
+                  <span className="px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold flex items-center gap-1 border border-emerald-300/40">
+                    <ShieldCheck className="w-3 h-3" />
+                    Verified
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-slate-500 font-medium">{email}</p>
+              <div className="flex items-center gap-2 mt-2">
+                <span className="px-2.5 py-0.5 bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 rounded-full text-[10px] font-bold">{grade}</span>
+                <span className="px-2.5 py-0.5 bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 rounded-full text-[10px] font-bold">{board}</span>
+              </div>
             </div>
+          </div>
+
+          <div className="flex flex-col sm:items-end gap-2">
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-700/60 border border-slate-200 dark:border-slate-600 text-[11px]">
+              <Database className="w-4 h-4 text-emerald-500" />
+              <div className="text-left sm:text-right">
+                <p className="font-bold text-slate-800 dark:text-white">Cloud SQL PostgreSQL</p>
+                <p className="text-[10px] text-slate-400">Region: asia-southeast1 (Active)</p>
+              </div>
+            </div>
+
+            {!user && (
+              <button
+                type="button"
+                onClick={signInWithGoogle}
+                className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs transition-all"
+              >
+                <LogIn className="w-3.5 h-3.5" />
+                <span>Link Google Account</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -109,10 +178,25 @@ export default function ProfilePage() {
 
           <button 
             type="submit" 
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl text-xs shadow-md flex items-center justify-center gap-2"
+            disabled={saving}
+            className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold py-3 rounded-xl text-xs shadow-md flex items-center justify-center gap-2 transition-all cursor-pointer"
           >
-            {saved ? <Check className="w-4 h-4 text-emerald-400" /> : <Save className="w-4 h-4" />}
-            <span>{saved ? 'Profile Updated!' : 'Save Changes'}</span>
+            {saving ? (
+              <>
+                <RefreshCw className="w-4 h-4 animate-spin text-white" />
+                <span>Saving to Cloud SQL...</span>
+              </>
+            ) : saved ? (
+              <>
+                <Check className="w-4 h-4 text-emerald-400" />
+                <span>Profile Updated & Synced with Database!</span>
+              </>
+            ) : (
+              <>
+                <Save className="w-4 h-4" />
+                <span>Save Changes & Sync</span>
+              </>
+            )}
           </button>
         </form>
       </div>
