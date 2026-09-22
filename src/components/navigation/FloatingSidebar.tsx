@@ -30,7 +30,11 @@ import {
   Shield,
   Zap,
   Flame,
-  Globe
+  Globe,
+  Video,
+  Mail,
+  FolderOpen,
+  StickyNote
 } from 'lucide-react';
 import LumoraLogo from '../LumoraLogo';
 import { ThemeSwitcher } from '../theme/ThemeSwitcher';
@@ -58,6 +62,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { name: 'Dashboard', path: '/student', icon: Sparkles },
       { name: 'AI Faculty (1k+)', path: '/student/mentors', icon: Users, badge: '1000+' },
       { name: 'Concept Explorer', path: '/student/concept-explorer', icon: Compass, badge: 'New' },
+      { name: 'Pro Upskilling', path: '/student/upskilling', icon: Video, badge: 'PRO' },
       { name: 'AI Homework Helper', path: '/student/homework-helper', icon: Camera, badge: 'AI' },
       { name: 'Explain Simply AI', path: '/student/explain-simply', icon: Sparkles },
       { name: 'AI Tutor', path: '/student/tutor', icon: BrainCircuit },
@@ -86,6 +91,8 @@ export const NAV_GROUPS: NavGroup[] = [
     groupName: 'Planning & Revision Hub',
     categoryKey: 'hub',
     items: [
+      { name: 'Google Workspace', path: '/student/workspace', icon: Sparkles, badge: 'Hub' },
+      { name: 'Keep Study Notes', path: '/student/keep', icon: StickyNote, badge: 'Keep' },
       { name: 'Study Planner', path: '/student/study-planner', icon: Calendar },
       { name: 'Calendar', path: '/student/calendar', icon: Calendar },
       { name: 'Subjects & Chapters', path: '/student/subjects', icon: BookOpen },

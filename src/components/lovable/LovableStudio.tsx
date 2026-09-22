@@ -22,6 +22,9 @@ import {
 } from '../../services/firebaseWebBuilderService';
 import { PublishModal } from './PublishModal';
 import { SharedWorkspaceModal } from './SharedWorkspaceModal';
+import { VirtualConsolePane } from '../webBuilder/VirtualConsolePane';
+import { AICodeAssistantModal } from '../webBuilder/AICodeAssistantModal';
+import { TemplatesLibraryModal, StarterTemplate } from '../webBuilder/TemplatesLibraryModal';
 
 interface LovableStudioProps {
   onSwitchToBlockBuilder?: () => void;
@@ -65,6 +68,7 @@ export const LovableStudio: React.FC<LovableStudioProps> = ({ onSwitchToBlockBui
   const [showConsole, setShowConsole] = useState<boolean>(false);
   const [consoleLogs, setConsoleLogs] = useState<ConsoleLogMessage[]>([]);
   const [showStartersModal, setShowStartersModal] = useState<boolean>(false);
+  const [showAIAssistantModal, setShowAIAssistantModal] = useState<boolean>(false);
   const [copiedCode, setCopiedCode] = useState<boolean>(false);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [iframeKey, setIframeKey] = useState<number>(0);
@@ -116,7 +120,73 @@ export const LovableStudio: React.FC<LovableStudioProps> = ({ onSwitchToBlockBui
     ];
   });
 
-  // Save project & chat to localStorage
+  // Execute REPL command inside sandbox iframe
+  const handleExecuteCommand = (cmd: string) => {
+    if (!iframeRef.current || !iframeRef.current.contentWindow) return;
+    try {
+      setConsoleLogs(prev => [
+        ...prev,
+        {
+          id: 'cmd-' + Date.now(),
+          level: 'info',
+          message: '› ' + cmd,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+        }
+      ]);
+      iframeRef.current.contentWindow.postMessage({ type: 'EVAL_COMMAND', code: cmd }, '*');
+    } catch (err: any) {
+      setConsoleLogs(prev => [
+        ...prev,
+        {
+          id: 'err-' + Date.now(),
+          level: 'error',
+          message: '[REPL Error]: ' + (err?.message || err),
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+        }
+      ]);
+    }
+  };
+
+  // Handle template selection from Starter Templates Modal
+  const handleSelectStarterTemplate = (template: StarterTemplate, mode: 'replace' | 'merge') => {
+    setHistoryStack(prev => [...prev.slice(-9), JSON.parse(JSON.stringify(project))]);
+    if (mode === 'replace') {
+      setProject(prev => ({
+        ...prev,
+        title: template.title,
+        description: template.tagline,
+        html: template.html,
+        css: template.css,
+        js: template.js,
+        updatedAt: new Date().toISOString(),
+        version: prev.version + 1
+      }));
+    } else {
+      setProject(prev => ({
+        ...prev,
+        html: prev.html + '\n\n' + template.html,
+        css: prev.css + '\n\n' + template.css,
+        js: prev.js + '\n\n' + template.js,
+        updatedAt: new Date().toISOString(),
+        version: prev.version + 1
+      }));
+    }
+    setIframeKey(k => k + 1);
+  };
+
+  // Handle code applied from AI Code Assistant
+  const handleApplyAssistantCode = (updated: { html?: string; css?: string; js?: string }) => {
+    setHistoryStack(prev => [...prev.slice(-9), JSON.parse(JSON.stringify(project))]);
+    setProject(prev => ({
+      ...prev,
+      html: updated.html !== undefined ? updated.html : prev.html,
+      css: updated.css !== undefined ? updated.css : prev.css,
+      js: updated.js !== undefined ? updated.js : prev.js,
+      updatedAt: new Date().toISOString(),
+      version: prev.version + 1
+    }));
+    setIframeKey(k => k + 1);
+  };
   useEffect(() => {
     try {
       localStorage.setItem('lumora_lovable_project_v1', JSON.stringify(project));
@@ -255,6 +325,19 @@ export const LovableStudio: React.FC<LovableStudioProps> = ({ onSwitchToBlockBui
             sendLog('error', ['[Runtime Error Line ' + line + ']: ' + msg]);
             return false;
           };
+
+          window.addEventListener('message', function(ev) {
+            if (ev.data && ev.data.type === 'EVAL_COMMAND' && ev.data.code) {
+              try {
+                var result = eval(ev.data.code);
+                if (result !== undefined) {
+                  sendLog('log', ['<= ' + (typeof result === 'object' ? JSON.stringify(result) : String(result))]);
+                }
+              } catch(err) {
+                sendLog('error', ['[REPL Error]: ' + (err.message || err)]);
+              }
+            }
+          });
         })();
       </script>
     `;
@@ -653,10 +736,21 @@ export const LovableStudio: React.FC<LovableStudioProps> = ({ onSwitchToBlockBui
             <span>Publish</span>
           </button>
           
+          {/* AI Code Assistant Button */}
+          <button
+            onClick={() => setShowAIAssistantModal(true)}
+            className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-rose-600 hover:from-purple-500 hover:to-rose-500 text-white text-xs font-black flex items-center gap-1.5 shadow-md shadow-indigo-600/30 transition active:scale-95"
+            title="Open Gemini AI Code Assistant to debug, refactor, or explain workspace code"
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">AI Assistant</span>
+          </button>
+
           {/* Starters Library */}
           <button
             onClick={() => setShowStartersModal(true)}
             className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200 border border-slate-700 flex items-center gap-1.5 transition"
+            title="Browse starter templates (HTML/CSS Landing, React Component, Canvas Arcade, Audio Synth)"
           >
             <FolderOpen className="w-3.5 h-3.5 text-amber-400" />
             <span className="hidden sm:inline">Templates</span>
@@ -869,8 +963,26 @@ export const LovableStudio: React.FC<LovableStudioProps> = ({ onSwitchToBlockBui
               </div>
             )}
 
-            {/* Quick Actions (Copy, Toggle Console) */}
+            {/* Quick Actions (AI Assistant, Templates, Copy, Toggle Console) */}
             <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowAIAssistantModal(true)}
+                className="px-2.5 py-1 rounded-md bg-gradient-to-r from-purple-600/80 to-indigo-600/80 hover:from-purple-600 hover:to-indigo-600 text-white font-bold flex items-center gap-1 transition text-[11px] shadow-xs"
+                title="AI Code Assistant (Refactor, Fix Bugs, Optimize)"
+              >
+                <Sparkles className="w-3 h-3 text-amber-300" />
+                <span>AI Assist</span>
+              </button>
+
+              <button
+                onClick={() => setShowStartersModal(true)}
+                className="px-2 py-1 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold flex items-center gap-1 transition text-[11px]"
+                title="Open starter templates library"
+              >
+                <FolderOpen className="w-3 h-3 text-amber-400" />
+                <span>Templates</span>
+              </button>
+
               <button
                 onClick={handleCopyCode}
                 className="px-2 py-1 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold flex items-center gap-1 transition"
@@ -882,13 +994,20 @@ export const LovableStudio: React.FC<LovableStudioProps> = ({ onSwitchToBlockBui
 
               <button
                 onClick={() => setShowConsole(!showConsole)}
-                className={`px-2 py-1 rounded-md font-semibold flex items-center gap-1 transition ${
+                className={`px-2 py-1 rounded-md font-semibold flex items-center gap-1.5 transition ${
                   showConsole ? 'bg-indigo-600 text-white' : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
                 }`}
                 title="Toggle Virtual Sandbox Console"
               >
                 <Terminal className="w-3 h-3" />
-                <span className="text-[11px]">Console ({consoleLogs.length})</span>
+                <span className="text-[11px]">Console</span>
+                {consoleLogs.some(l => l.level === 'error') ? (
+                  <span className="px-1 py-0.2 rounded-full bg-rose-500 text-[9px] font-bold text-white leading-none">
+                    {consoleLogs.filter(l => l.level === 'error').length}
+                  </span>
+                ) : consoleLogs.length > 0 ? (
+                  <span className="text-[10px] text-slate-400">({consoleLogs.length})</span>
+                ) : null}
               </button>
             </div>
           </div>
@@ -982,109 +1101,36 @@ export const LovableStudio: React.FC<LovableStudioProps> = ({ onSwitchToBlockBui
             )}
           </div>
 
-          {/* BOTTOM VIRTUAL CONSOLE DRAWER */}
-          {showConsole && (
-            <div className="h-44 border-t border-slate-800 bg-slate-950 flex flex-col font-mono text-xs z-10 shadow-xl">
-              <div className="px-4 py-1.5 bg-slate-900 border-b border-slate-800 flex items-center justify-between">
-                <div className="flex items-center gap-2 text-slate-300">
-                  <Terminal className="w-3.5 h-3.5 text-cyan-400" />
-                  <span className="font-bold text-[11px]">Sandbox Console Output</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setConsoleLogs([])}
-                    className="text-[10px] text-slate-400 hover:text-slate-200"
-                  >
-                    Clear Logs
-                  </button>
-                  <button
-                    onClick={() => setShowConsole(false)}
-                    className="text-slate-400 hover:text-slate-200"
-                  >
-                    <ChevronDown className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
-
-              <div className="flex-1 p-3 overflow-y-auto space-y-1">
-                {consoleLogs.length === 0 ? (
-                  <p className="text-slate-600 text-[11px] italic">No console logs yet. Call console.log() in your code to see outputs here.</p>
-                ) : (
-                  consoleLogs.map((log) => (
-                    <div
-                      key={log.id}
-                      className={`text-[11px] flex items-start gap-2 leading-tight ${
-                        log.level === 'error'
-                          ? 'text-rose-400 bg-rose-950/20 p-1 rounded'
-                          : log.level === 'warn'
-                          ? 'text-amber-400'
-                          : log.level === 'info'
-                          ? 'text-cyan-400'
-                          : 'text-slate-300'
-                      }`}
-                    >
-                      <span className="text-slate-600 text-[9px] select-none">[{log.timestamp}]</span>
-                      <span className="flex-1 break-all">{log.message}</span>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-          )}
+          {/* BOTTOM VIRTUAL CONSOLE PANE */}
+          <VirtualConsolePane
+            logs={consoleLogs}
+            onClear={() => setConsoleLogs([])}
+            onExecuteCommand={handleExecuteCommand}
+            isOpen={showConsole}
+            onToggle={() => setShowConsole(!showConsole)}
+            maxHeight="220px"
+          />
         </main>
       </div>
 
-      {/* STARTER TEMPLATES MODAL */}
+      {/* STARTER TEMPLATES LIBRARY MODAL */}
       {showStartersModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="max-w-3xl w-full bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-4 max-h-[85vh] flex flex-col">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <div className="flex items-center gap-2">
-                <FolderOpen className="w-5 h-5 text-amber-400" />
-                <h3 className="text-lg font-black text-white">Choose a Starter App</h3>
-              </div>
-              <button
-                onClick={() => setShowStartersModal(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-white"
-              >
-                ✕
-              </button>
-            </div>
+        <TemplatesLibraryModal
+          onSelectTemplate={handleSelectStarterTemplate}
+          onClose={() => setShowStartersModal(false)}
+        />
+      )}
 
-            <p className="text-xs text-slate-400">
-              Select any pre-built full-stack interactive prototype. You can immediately customize and prompt the AI to adapt it!
-            </p>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 overflow-y-auto flex-1 pr-1">
-              {LOVABLE_STARTERS.map((s) => (
-                <div
-                  key={s.id}
-                  onClick={() => handleLoadStarter(s)}
-                  className="p-4 rounded-2xl bg-slate-950 border border-slate-800 hover:border-rose-500/80 cursor-pointer transition flex flex-col justify-between group"
-                >
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-2xl">{s.icon}</span>
-                      <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-indigo-950 text-indigo-300 border border-indigo-800">
-                        {s.badge}
-                      </span>
-                    </div>
-                    <h4 className="font-bold text-sm text-white group-hover:text-rose-400 transition">
-                      {s.title}
-                    </h4>
-                    <p className="text-xs text-slate-400 line-clamp-2 leading-relaxed">
-                      {s.tagline}
-                    </p>
-                  </div>
-                  <div className="mt-4 pt-3 border-t border-slate-900 flex justify-between items-center text-xs font-bold text-cyan-400">
-                    <span>Launch in Studio</span>
-                    <ArrowUpRight className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+      {/* AI CODE ASSISTANT MODAL (Gemini Powered) */}
+      {showAIAssistantModal && (
+        <AICodeAssistantModal
+          html={project.html}
+          css={project.css}
+          js={project.js}
+          activeFile={activeTab === 'combined' ? 'all' : activeTab}
+          onApplyCode={handleApplyAssistantCode}
+          onClose={() => setShowAIAssistantModal(false)}
+        />
       )}
 
       {/* Firebase Hosting Live Publish Modal */}

@@ -39,7 +39,9 @@ import {
   Play,
   ChevronRight,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Zap,
+  Shield
 } from "lucide-react";
 import { Subject, StudyTask } from "../types";
 import confetti from "canvas-confetti";
@@ -57,8 +59,10 @@ import { DailyQuote } from "../components/DailyQuote";
 import { VoiceTutorButton } from "../components/voice/VoiceTutorButton";
 import { VoiceTutorModal } from "../components/voice/VoiceTutorModal";
 import { useTheme } from "../context/ThemeContext";
+import { useAuth } from "../context/AuthContext";
 import { WeeklySummaryStatsCard } from "../components/WeeklySummaryStatsCard";
 import { StudentRecommendations } from "../components/StudentRecommendations";
+import { QuickCaptureKeepWidget } from "../components/dashboard/QuickCaptureKeepWidget";
 
 // Widget Imports
 import { WidgetConfig, WidgetId } from "../components/widgets/types";
@@ -170,6 +174,7 @@ const INITIAL_TASKS: StudyTask[] = [
 export default function StudentDashboard() {
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
+  const { user } = useAuth();
   const { profile, toggleTaskComplete, resetOnboarding } = useStudentProfile();
 
   const [showCompanionModules, setShowCompanionModules] = useState(false);
@@ -614,6 +619,83 @@ export default function StudentDashboard() {
             </button>
             <VoiceTutorButton variant="compact" onClick={() => setIsVoiceModalOpen(true)} />
           </div>
+        </div>
+
+        {/* Pro Upskilling Video Masterclasses Feature Card */}
+        <div 
+          onClick={() => navigate('/student/upskilling')}
+          className="mb-8 p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-rose-950/50 via-amber-950/40 to-slate-900 border border-rose-800/40 hover:border-rose-500/60 shadow-lg cursor-pointer transition-all duration-300 group flex flex-col md:flex-row md:items-center justify-between gap-4"
+        >
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-rose-600 to-amber-500 text-white flex items-center justify-center shadow-lg shadow-rose-600/30 group-hover:scale-110 transition-transform shrink-0">
+              <Play className="w-6 h-6 ml-0.5 fill-current" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 mb-0.5">
+                <span className="px-2 py-0.5 rounded-full bg-rose-600 text-white text-[10px] font-extrabold tracking-wider uppercase flex items-center gap-1">
+                  <Zap className="w-2.5 h-2.5 fill-current" />
+                  PRO UPSKILLING
+                </span>
+                <span className="text-xs text-amber-300 font-semibold">
+                  Simplilearn • MIT OpenCourseWare • Canva • freeCodeCamp
+                </span>
+              </div>
+              <h3 className="text-base font-extrabold text-white group-hover:text-rose-300 transition-colors">
+                Master High-Income Skills with Instant Autoplay Courses
+              </h3>
+              <p className="text-xs text-slate-300 line-clamp-1">
+                AI, Machine Learning, Python, Premiere Pro, DaVinci Resolve, Canva Graphic Design & YouTube Content Creation.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="text-xs font-bold text-rose-400 group-hover:translate-x-1 transition-transform flex items-center gap-1">
+              <span>Explore Masterclasses</span>
+              <ChevronRight className="w-4 h-4" />
+            </span>
+          </div>
+        </div>
+
+        {/* Google Workspace Suite & Firebase Academic Cloud Card */}
+        <div 
+          onClick={() => navigate('/student/workspace')}
+          className="mb-8 p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-blue-950/60 via-indigo-950/50 to-slate-900 border border-blue-800/40 hover:border-blue-500/60 shadow-lg cursor-pointer transition-all duration-300 group flex flex-col md:flex-row md:items-center justify-between gap-4"
+        >
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center shadow-lg shadow-blue-600/30 group-hover:scale-110 transition-transform shrink-0">
+              <Sparkles className="w-6 h-6" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 mb-0.5">
+                <span className="px-2 py-0.5 rounded-full bg-blue-600 text-white text-[10px] font-extrabold tracking-wider uppercase flex items-center gap-1">
+                  <Shield className="w-2.5 h-2.5 fill-current" />
+                  WORKSPACE SUITE
+                </span>
+                <span className="text-xs text-blue-300 font-semibold">
+                  Google Calendar • Gmail • Chat • Forms • Picker • Keep Notes
+                </span>
+              </div>
+              <h3 className="text-base font-extrabold text-white group-hover:text-blue-300 transition-colors">
+                Connected Google Workspace & Firebase Cloud Hub
+              </h3>
+              <p className="text-xs text-slate-300 line-clamp-1">
+                Sync academic schedules to Google Calendar, read school emails, chat with study spaces, create quizzes in Google Forms, and pin Keep notes.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="text-xs font-bold text-blue-400 group-hover:translate-x-1 transition-transform flex items-center gap-1">
+              <span>Open Workspace Hub</span>
+              <ChevronRight className="w-4 h-4" />
+            </span>
+          </div>
+        </div>
+
+        {/* Compact Quick Capture Widget for Google Keep Notes */}
+        <div className="mb-8">
+          <QuickCaptureKeepWidget userId={user?.uid || null} />
         </div>
 
         {/* ----------------------------------------------------------------- */}

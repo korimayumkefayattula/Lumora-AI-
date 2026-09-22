@@ -43,6 +43,7 @@ export default function PricingPage() {
       popular: true,
       features: [
         'Unlimited 1-on-1 consultations with 1,000+ AI Teacher Scholars',
+        'Full Pro Upskilling Video Academy with Autoplay (Simplilearn, MIT OCW, Canva, freeCodeCamp)',
         'Weekly Student Progress Chart & Downloadable PDF Audit reports',
         'Complete Memory Tricks & AI Mnemonic Generator Vault',
         'Spaced Repetition Mastery Hub with SuperMemo-2 scheduling',

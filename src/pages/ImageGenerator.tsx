@@ -52,12 +52,15 @@ interface GeneratedImageItem {
 }
 
 const MODEL_OPTIONS = [
-  { id: 'nano-banana-free', name: 'Lumora Flux HD Engine', desc: 'High-speed textbook & concept visualizer (Free & Fast)', badge: 'Recommended', icon: '⚡' },
-  { id: 'vector-svg', name: 'Lumora Vector AI (Gemini 3.7)', desc: '100% precision annotated SVG diagrams with infinite zoom', badge: 'Vector SVG', icon: '📐' },
+  { id: 'nano-banana-free', name: 'Nano Banana Free Model', desc: 'Best free model for visuals, mind maps, flowcharts & infographics (ChatGPT DALL-E 3 style)', badge: 'Best Free • Nano Banana', icon: '🍌' },
+  { id: 'vector-svg', name: 'Lumora Vector AI (Gemini SVG)', desc: '100% precision annotated SVG diagrams with infinite zoom', badge: 'Vector SVG', icon: '📐' },
   { id: 'imagen-3', name: 'Google Imagen 3.0 Ultra', desc: 'Studio photorealism & 4K educational macro rendering', badge: 'Imagen 3', icon: '🎨' }
 ];
 
 const STYLE_OPTIONS = [
+  { id: 'chatgpt-infographic', name: 'ChatGPT Style Infographic', desc: 'Modular bento cards, vibrant modern palette, metrics & vector icons', icon: Palette },
+  { id: 'chatgpt-mindmap', name: 'ChatGPT Style Mind Map', desc: 'Glowing central concept core with organic branches & sleek pill cards', icon: Sparkles },
+  { id: 'chatgpt-flowchart', name: 'ChatGPT Style Flowchart', desc: 'Step-by-step pipeline layout with process cards & decision diamonds', icon: Binary },
   { id: 'neoclassical-allegory', name: 'Neoclassical Enlightenment Allegory', desc: 'Regnault & David oil painting with allegorical figures of Reason & Science', icon: Sparkles },
   { id: 'scientific-diagram', name: 'Scientific Diagram', desc: 'Crisp labeled callouts & white backdrop', icon: Compass },
   { id: 'textbook-illustration', name: 'Textbook Illustration', desc: 'Detailed educational print line art', icon: BookOpen },

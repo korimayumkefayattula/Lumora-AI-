@@ -39,6 +39,8 @@ import MemoryTricksPage from "./pages/MemoryTricksPage";
 import CompetitionsPage from "./pages/CompetitionsPage";
 import PricingPage from "./pages/PricingPage";
 import StudentWebBuilderPage from "./pages/StudentWebBuilderPage";
+import UpskillingPage from "./pages/UpskillingPage";
+import GoogleWorkspaceHubPage from "./pages/GoogleWorkspaceHubPage";
 
 export default function App() {
   return (
@@ -53,6 +55,8 @@ export default function App() {
               <Route path="/student" element={<StudentLayout />}>
                 <Route index element={<StudentDashboard />} />
                 <Route path="concept-explorer" element={<ConceptExplorerPage />} />
+                <Route path="upskilling" element={<UpskillingPage />} />
+                <Route path="courses" element={<UpskillingPage />} />
                 <Route path="tutor" element={<AITutor />} />
                 <Route path="homework-helper" element={<HomeworkHelperPage />} />
                 <Route path="explain-simply" element={<ExplainSimplyWorkspace />} />
@@ -67,6 +71,12 @@ export default function App() {
                 <Route path="mock-tests" element={<MockTestsPage />} />
                 <Route path="study-planner" element={<StudyPlannerPage />} />
                 <Route path="calendar" element={<CalendarPage />} />
+                <Route path="workspace" element={<GoogleWorkspaceHubPage />} />
+                <Route path="keep" element={<GoogleWorkspaceHubPage />} />
+                <Route path="gmail" element={<GoogleWorkspaceHubPage />} />
+                <Route path="chat" element={<GoogleWorkspaceHubPage />} />
+                <Route path="forms" element={<GoogleWorkspaceHubPage />} />
+                <Route path="picker" element={<GoogleWorkspaceHubPage />} />
                 <Route path="mind-map" element={<MindMapPage />} />
                 <Route path="subjects" element={<SubjectsPage />} />
                 <Route path="pyq" element={<PYQPage />} />

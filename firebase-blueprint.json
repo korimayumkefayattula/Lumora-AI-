@@ -58,6 +58,40 @@
         }
       },
       "required": ["roomId", "projectId", "lastEditedAt"]
+    },
+    "KeepNote": {
+      "title": "KeepNote",
+      "description": "Student quick study notes synced with Google Keep format",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "color": { "type": "string" },
+        "pinned": { "type": "boolean" },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "userId": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "title", "userId", "updatedAt"]
+    },
+    "AcademicEvent": {
+      "title": "AcademicEvent",
+      "description": "Student calendar events synced with Google Calendar",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "date": { "type": "string" },
+        "time": { "type": "string" },
+        "type": { "type": "string" },
+        "subject": { "type": "string" },
+        "googleEventId": { "type": "string" },
+        "userId": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "title", "date", "userId"]
     }
   },
   "firestore": {
@@ -72,6 +106,14 @@
     "/shared_workspaces/{roomId}": {
       "schema": "SharedWorkspaceRoom",
       "description": "Real-time collaborative workspace state for co-editing."
+    },
+    "/keep_notes/{noteId}": {
+      "schema": "KeepNote",
+      "description": "Quick study notes and checklists matching Google Keep style."
+    },
+    "/calendar_events/{eventId}": {
+      "schema": "AcademicEvent",
+      "description": "Academic study schedule and exam calendar events."
     }
   }
 }

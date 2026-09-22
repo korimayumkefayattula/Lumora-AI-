@@ -3,9 +3,15 @@ import {
   User, 
   signInWithPopup, 
   signOut, 
-  onAuthStateChanged 
+  onAuthStateChanged,
+  GoogleAuthProvider
 } from 'firebase/auth';
-import { auth, googleAuthProvider } from '../lib/firebase.ts';
+import { 
+  auth, 
+  googleAuthProvider, 
+  setCachedWorkspaceToken, 
+  getCachedWorkspaceToken 
+} from '../lib/firebase.ts';
 
 export interface DbUser {
   id: number;
@@ -23,8 +29,10 @@ interface AuthContextType {
   user: User | null;
   dbUser: DbUser | null;
   token: string | null;
+  workspaceToken: string | null;
   loading: boolean;
   signInWithGoogle: () => Promise<void>;
+  requestWorkspaceAccess: () => Promise<string | null>;
   signOutUser: () => Promise<void>;
   syncUserProfile: (profileData?: Partial<DbUser>) => Promise<void>;
   getIdToken: () => Promise<string | null>;
@@ -36,6 +44,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [dbUser, setDbUser] = useState<DbUser | null>(null);
   const [token, setToken] = useState<string | null>(null);
+  const [workspaceToken, setWorkspaceToken] = useState<string | null>(getCachedWorkspaceToken());
   const [loading, setLoading] = useState(true);
 
   // Synchronize authenticated Firebase user with Cloud SQL PostgreSQL database
@@ -75,6 +84,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
         setToken(null);
         setDbUser(null);
+        setCachedWorkspaceToken(null);
+        setWorkspaceToken(null);
       }
       setLoading(false);
     });
@@ -87,9 +98,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const cred = await signInWithPopup(auth, googleAuthProvider);
       setUser(cred.user);
+      const credential = GoogleAuthProvider.credentialFromResult(cred);
+      if (credential?.accessToken) {
+        setCachedWorkspaceToken(credential.accessToken);
+        setWorkspaceToken(credential.accessToken);
+      }
       await syncWithDatabase(cred.user);
     } catch (error) {
       console.error('Google Sign-In failed:', error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const requestWorkspaceAccess = async (): Promise<string | null> => {
+    setLoading(true);
+    try {
+      const cred = await signInWithPopup(auth, googleAuthProvider);
+      setUser(cred.user);
+      const credential = GoogleAuthProvider.credentialFromResult(cred);
+      if (credential?.accessToken) {
+        setCachedWorkspaceToken(credential.accessToken);
+        setWorkspaceToken(credential.accessToken);
+        return credential.accessToken;
+      }
+      return null;
+    } catch (error) {
+      console.error('Failed to request Google Workspace access:', error);
       throw error;
     } finally {
       setLoading(false);
@@ -102,6 +138,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(null);
       setDbUser(null);
       setToken(null);
+      setCachedWorkspaceToken(null);
+      setWorkspaceToken(null);
     } catch (error) {
       console.error('Sign Out failed:', error);
       throw error;
@@ -148,8 +186,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         user,
         dbUser,
         token,
+        workspaceToken,
         loading,
         signInWithGoogle,
+        requestWorkspaceAccess,
         signOutUser,
         syncUserProfile,
         getIdToken

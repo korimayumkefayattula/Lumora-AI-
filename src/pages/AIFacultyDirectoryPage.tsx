@@ -200,13 +200,13 @@ As ${activeConsultant.name}, my motto is: *"${activeConsultant.motto}"*.
         <div>
           <div className="flex items-center gap-2 text-rose-600 dark:text-rose-400 font-bold text-xs uppercase tracking-wider">
             <Users className="w-4 h-4" />
-            <span>The Grand Intellectual Academy • 1,000+ AI Teacher Agents</span>
+            <span>Real-World Historical Legends & Master Thinkers</span>
           </div>
           <h1 className="text-2xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight mt-1">
-            AI Faculty & Specialized Subject Mentors
+            AI Faculty: Real Personalities Teaching Real Knowledge
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 mt-1.5 max-w-2xl">
-            Learn directly from specialized AI scholar avatars modeled after the greatest scientific minds, Nobel laureates, and top national Olympiad coaches. Each mentor is programmed to teach with crystal clarity, step-by-step derivations, and real-world analogies.
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 mt-1.5 max-w-3xl">
+            Learn directly from real-world scientific and mathematical legends—Richard Feynman, Albert Einstein, Sir Isaac Newton, Marie Curie, Srinivasa Ramanujan, Leonhard Euler, George Pólya, Charles Darwin, Alan Turing, Ada Lovelace, and Carl Sagan. Each faculty member teaches with their authentic voice, genuine historical discoveries, and deep real-world intuition.
           </p>
         </div>
 

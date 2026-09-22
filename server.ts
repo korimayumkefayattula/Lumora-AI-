@@ -38,17 +38,174 @@ app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 // Using the recommended environment variable and User-Agent header
 const apiKey = process.env.GEMINI_API_KEY;
 
-// Check if API key is provided and warn (without crashing startup, as per guidelines)
-if (!apiKey) {
-  console.warn("⚠️ Warning: GEMINI_API_KEY is not defined. AI functionality will fail to initialize.");
+// ==========================================
+// GEMINI MULTI-KEY POOL & LOAD BALANCING ENGINE
+// ==========================================
+class GeminiKeyPoolManager {
+  private keys: string[] = [];
+  private currentIndex: number = 0;
+  private keyCooldowns: Map<number, number> = new Map();
+  private keyStats: Map<number, { successCount: number; failureCount: number; lastUsed: number }> = new Map();
+
+  constructor() {
+    this.refreshKeys();
+  }
+
+  public refreshKeys(): void {
+    const collected: string[] = [];
+    
+    // 1. Read GEMINI_API_KEYS (comma, semicolon, or newline delimited)
+    if (process.env.GEMINI_API_KEYS) {
+      const parts = process.env.GEMINI_API_KEYS.split(/[\n,;]+/)
+        .map(k => k.trim().replace(/^["']|["']$/g, ''))
+        .filter(Boolean);
+      for (const p of parts) {
+        if (!collected.includes(p)) collected.push(p);
+      }
+    }
+
+    // 2. Read standard GEMINI_API_KEY
+    if (process.env.GEMINI_API_KEY) {
+      const primary = process.env.GEMINI_API_KEY.trim().replace(/^["']|["']$/g, '');
+      if (primary && !collected.includes(primary)) {
+        collected.unshift(primary);
+      }
+    }
+
+    // 3. Read numbered keys GEMINI_API_KEY_1 through GEMINI_API_KEY_20
+    for (let i = 1; i <= 20; i++) {
+      const numbered = process.env[`GEMINI_API_KEY_${i}`];
+      if (numbered) {
+        const clean = numbered.trim().replace(/^["']|["']$/g, '');
+        if (clean && !collected.includes(clean)) {
+          collected.push(clean);
+        }
+      }
+    }
+
+    this.keys = collected;
+    if (this.keys.length > 1) {
+      console.log(`🚀 [Gemini Multi-Key Pool] Initialized with ${this.keys.length} API keys for automated rotation and quota failover.`);
+    } else if (this.keys.length === 1) {
+      console.log(`[Gemini Multi-Key Pool] Initialized with 1 primary Gemini API key.`);
+    } else {
+      console.warn(`[Gemini Multi-Key Pool] No Gemini API keys found in environment variables.`);
+    }
+  }
+
+  public getKeyCount(): number {
+    return this.keys.length;
+  }
+
+  public getAllKeys(): string[] {
+    return [...this.keys];
+  }
+
+  public getNextActiveKey(): { key: string; index: number } {
+    if (this.keys.length === 0) {
+      const fallback = process.env.GEMINI_API_KEY || "";
+      if (!fallback) {
+        throw new Error("No Gemini API keys configured. Please set GEMINI_API_KEY or GEMINI_API_KEYS.");
+      }
+      return { key: fallback, index: 0 };
+    }
+
+    const now = Date.now();
+    const total = this.keys.length;
+
+    // 1. Search for next key that is not in cooldown
+    for (let attempt = 0; attempt < total; attempt++) {
+      const idx = (this.currentIndex + attempt) % total;
+      const cooldownUntil = this.keyCooldowns.get(idx) || 0;
+      if (cooldownUntil <= now) {
+        this.currentIndex = (idx + 1) % total;
+        this.recordUse(idx);
+        return { key: this.keys[idx], index: idx };
+      }
+    }
+
+    // 2. If all keys are in cooldown, pick the one expiring soonest
+    let earliestIdx = 0;
+    let earliestTime = Infinity;
+    for (let i = 0; i < total; i++) {
+      const cooldownUntil = this.keyCooldowns.get(i) || 0;
+      if (cooldownUntil < earliestTime) {
+        earliestTime = cooldownUntil;
+        earliestIdx = i;
+      }
+    }
+
+    this.currentIndex = (earliestIdx + 1) % total;
+    this.recordUse(earliestIdx);
+    return { key: this.keys[earliestIdx], index: earliestIdx };
+  }
+
+  public recordSuccess(index: number): void {
+    this.keyCooldowns.delete(index);
+    const stats = this.keyStats.get(index) || { successCount: 0, failureCount: 0, lastUsed: Date.now() };
+    stats.successCount++;
+    stats.lastUsed = Date.now();
+    this.keyStats.set(index, stats);
+  }
+
+  public recordFailure(index: number, error: any): void {
+    const errMsg = String(error?.message || error || "");
+    const isQuota = 
+      errMsg.includes("429") || 
+      errMsg.includes("RESOURCE_EXHAUSTED") || 
+      errMsg.includes("quota") || 
+      errMsg.includes("Too Many Requests") ||
+      errMsg.includes("Rate limit");
+
+    const cooldownMs = isQuota ? 90000 : 15000;
+    this.keyCooldowns.set(index, Date.now() + cooldownMs);
+
+    const stats = this.keyStats.get(index) || { successCount: 0, failureCount: 0, lastUsed: Date.now() };
+    stats.failureCount++;
+    stats.lastUsed = Date.now();
+    this.keyStats.set(index, stats);
+
+    console.warn(`[Gemini Multi-Key Pool] Key #${index + 1} on cooldown for ${cooldownMs/1000}s (${isQuota ? 'QUOTA_429' : 'API_ERROR'}): ${errMsg.slice(0, 100)}`);
+  }
+
+  private recordUse(index: number): void {
+    const stats = this.keyStats.get(index) || { successCount: 0, failureCount: 0, lastUsed: Date.now() };
+    stats.lastUsed = Date.now();
+    this.keyStats.set(index, stats);
+  }
+
+  public getPoolStatus() {
+    const now = Date.now();
+    return {
+      totalKeys: this.keys.length,
+      activeKeyIndex: this.currentIndex,
+      healthyKeyCount: this.keys.filter((_, idx) => (this.keyCooldowns.get(idx) || 0) <= now).length,
+      keys: this.keys.map((k, idx) => {
+        const cooldownUntil = this.keyCooldowns.get(idx) || 0;
+        const stats = this.keyStats.get(idx) || { successCount: 0, failureCount: 0, lastUsed: 0 };
+        return {
+          index: idx + 1,
+          preview: k ? `${k.slice(0, 6)}...${k.slice(-4)}` : 'none',
+          healthy: cooldownUntil <= now,
+          cooldownSec: Math.max(0, Math.ceil((cooldownUntil - now) / 1000)),
+          successes: stats.successCount,
+          failures: stats.failureCount,
+          lastUsed: stats.lastUsed ? new Date(stats.lastUsed).toLocaleTimeString() : 'never'
+        };
+      })
+    };
+  }
 }
 
-const getAiClient = (): GoogleGenAI => {
-  if (!process.env.GEMINI_API_KEY) {
-    throw new Error("GEMINI_API_KEY environment variable is required to generate study plans.");
+export const geminiKeyPool = new GeminiKeyPoolManager();
+
+export const getAiClient = (overrideKey?: string): GoogleGenAI => {
+  const chosenKey = overrideKey || (geminiKeyPool.getKeyCount() > 0 ? geminiKeyPool.getNextActiveKey().key : (process.env.GEMINI_API_KEY || ""));
+  if (!chosenKey) {
+    throw new Error("GEMINI_API_KEY or GEMINI_API_KEYS is required.");
   }
   return new GoogleGenAI({
-    apiKey: process.env.GEMINI_API_KEY,
+    apiKey: chosenKey,
     httpOptions: {
       headers: {
         'User-Agent': 'aistudio-build',
@@ -242,7 +399,7 @@ function safeParseJson<T = any>(text: string | undefined | null, fallback: T): T
   }
 }
 
-// Resilient Gemini Content Generator with multi-tier model fallback, 503 backoff & retry
+// Resilient Gemini Content Generator with multi-tier model fallback, multi-key quota failover, 503 backoff & retry
 async function generateContentWithResilience(
   ai: GoogleGenAI,
   options: {
@@ -257,50 +414,78 @@ async function generateContentWithResilience(
   const fallbackList = options.fallbackModels || defaultFallbacks;
   const modelsToTry = Array.from(new Set([primaryModel, ...fallbackList]));
 
+  const totalKeys = Math.max(1, geminiKeyPool.getKeyCount());
   let lastError: any = null;
-  for (let i = 0; i < modelsToTry.length; i++) {
-    const currentModel = modelsToTry[i];
-    
-    // Up to 2 attempts per model if transient 503/429 occurs
-    for (let attempt = 0; attempt < 2; attempt++) {
-      try {
-        const response = await ai.models.generateContent({
-          model: currentModel,
-          contents: options.contents,
-          config: options.config,
-        });
-        return response;
-      } catch (err: any) {
-        lastError = err;
-        const errMsg = err?.message || String(err);
-        const is503 = errMsg.includes("503") || errMsg.includes("high demand") || errMsg.includes("UNAVAILABLE");
-        const is429 = errMsg.includes("429") || errMsg.includes("quota") || errMsg.includes("RESOURCE_EXHAUSTED");
-        const isTransient = is503 || is429 || errMsg.includes("ECONNRESET") || errMsg.includes("fetch failed");
 
-        console.warn(`[Gemini Attempt ${i + 1}.${attempt + 1}/${modelsToTry.length} - ${currentModel}]: ${errMsg.slice(0, 150)}`);
+  // Outer loop: Try up to total available keys in pool if 429 / quota exhaustion occurs
+  for (let keyAttempt = 0; keyAttempt < Math.min(totalKeys, 5); keyAttempt++) {
+    let currentAi = ai;
+    let currentKeyIndex = 0;
 
-        // If it's not transient, try next model without looping retry
-        if (!isTransient) {
-          // If schema error, try once without strict responseSchema but with application/json
-          if (options.config?.responseSchema && attempt === 0) {
-            try {
-              const fallbackConfig = { ...options.config };
-              delete fallbackConfig.responseSchema;
-              fallbackConfig.responseMimeType = "application/json";
-              const response = await ai.models.generateContent({
-                model: currentModel,
-                contents: options.contents,
-                config: fallbackConfig,
-              });
-              return response;
-            } catch {}
+    if (keyAttempt > 0 && geminiKeyPool.getKeyCount() > 1) {
+      const nextKey = geminiKeyPool.getNextActiveKey();
+      currentKeyIndex = nextKey.index;
+      currentAi = new GoogleGenAI({
+        apiKey: nextKey.key,
+        httpOptions: { headers: { 'User-Agent': 'aistudio-build' } }
+      });
+      console.log(`[Gemini Multi-Key Failover] Switched to Key #${currentKeyIndex + 1}/${totalKeys} on quota failure.`);
+    }
+
+    for (let i = 0; i < modelsToTry.length; i++) {
+      const currentModel = modelsToTry[i];
+      
+      // Up to 2 attempts per model if transient 503/429 occurs
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+          const response = await currentAi.models.generateContent({
+            model: currentModel,
+            contents: options.contents,
+            config: options.config,
+          });
+          geminiKeyPool.recordSuccess(currentKeyIndex);
+          return response;
+        } catch (err: any) {
+          lastError = err;
+          const errMsg = err?.message || String(err);
+          const is503 = errMsg.includes("503") || errMsg.includes("high demand") || errMsg.includes("UNAVAILABLE");
+          const is429 = errMsg.includes("429") || errMsg.includes("quota") || errMsg.includes("RESOURCE_EXHAUSTED");
+          const isTransient = is503 || is429 || errMsg.includes("ECONNRESET") || errMsg.includes("fetch failed");
+
+          console.warn(`[Gemini Attempt ${i + 1}.${attempt + 1}/${modelsToTry.length} - ${currentModel} (Key #${currentKeyIndex + 1})]: ${errMsg.slice(0, 150)}`);
+
+          if (is429) {
+            geminiKeyPool.recordFailure(currentKeyIndex, err);
+            // If we have multiple keys available, break to try the next key immediately!
+            if (geminiKeyPool.getKeyCount() > 1) {
+              break;
+            }
           }
-          break;
-        }
 
-        // Exponential backoff with jitter for 503 / 429
-        const backoffMs = Math.min(2500, (450 * Math.pow(1.8, attempt + i)) + Math.floor(Math.random() * 300));
-        await new Promise(r => setTimeout(r, backoffMs));
+          // If it's not transient, try next model without looping retry
+          if (!isTransient) {
+            // If schema error, try once without strict responseSchema but with application/json
+            if (options.config?.responseSchema && attempt === 0) {
+              try {
+                const fallbackConfig = { ...options.config };
+                delete fallbackConfig.responseSchema;
+                fallbackConfig.responseMimeType = "application/json";
+                const response = await currentAi.models.generateContent({
+                  model: currentModel,
+                  contents: options.contents,
+                  config: fallbackConfig,
+                });
+                geminiKeyPool.recordSuccess(currentKeyIndex);
+                return response;
+              } catch {}
+            }
+            break;
+          }
+
+          // Exponential backoff with jitter for 503 / 429
+          const backoffMs = Math.min(2500, (400 * Math.pow(1.8, attempt + i)) + Math.floor(Math.random() * 300));
+          await new Promise(r => setTimeout(r, backoffMs));
+        }
       }
     }
   }
@@ -309,17 +494,37 @@ async function generateContentWithResilience(
 
 // API Health & Provider Status
 app.get("/api/ai/status", async (req, res) => {
-  const geminiConfigured = Boolean(process.env.GEMINI_API_KEY);
+  const poolStatus = geminiKeyPool.getPoolStatus();
+  const geminiConfigured = poolStatus.totalKeys > 0;
   const bytezKey = process.env.BYTEZ_API_KEY || BYTEZ_API_KEY;
   const bytezConfigured = Boolean(bytezKey);
   res.json({
     status: "ok",
     providers: {
-      gemini: { configured: geminiConfigured },
+      gemini: { 
+        configured: geminiConfigured,
+        totalKeys: poolStatus.totalKeys,
+        healthyKeys: poolStatus.healthyKeyCount,
+        activeKeyIndex: poolStatus.activeKeyIndex
+      },
       bytez: { configured: bytezConfigured, endpoint: "https://api.bytez.com/models/v2/" },
       resilientTutorEngine: { status: "active" }
     }
   });
+});
+
+// Endpoint for startup admin to inspect multi-key pool health and metrics
+app.get("/api/gemini/pool-status", async (req, res) => {
+  try {
+    const status = geminiKeyPool.getPoolStatus();
+    res.json({
+      success: true,
+      data: status,
+      instructions: "Add multiple keys via GEMINI_API_KEYS='key1,key2,key3' or GEMINI_API_KEY_1, GEMINI_API_KEY_2 in your environment or Secrets panel."
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: "Failed to retrieve key pool status", message: error.message });
+  }
 });
 
 app.get("/api/bytez/status", async (req, res) => {
@@ -873,8 +1078,12 @@ Strict Technical and Aesthetic SVG Requirements:
   return { base64, mimeType, url, svgText: rawSvg };
 }
 
-// Helper to construct high-speed direct URLs for Lumora Free AI Engine
-function getNanoBananaFreeDirectUrl(prompt: string, aspectRatio: string = "16:9", style: string = "scientific-diagram"): string {
+// Helper to construct high-speed direct URLs for Lumora Free AI Engine (Nano Banana)
+function getNanoBananaFreeDirectUrl(
+  prompt: string, 
+  aspectRatio: string = "16:9", 
+  style: string = "scientific-diagram"
+): string {
   let width = 1024;
   let height = 576;
   switch (aspectRatio) {
@@ -901,9 +1110,15 @@ function getNanoBananaFreeDirectUrl(prompt: string, aspectRatio: string = "16:9"
       break;
   }
 
-  // Prepend pedagogical and quality enhancers
+  // Prepend pedagogical, ChatGPT DALL-E 3 aesthetic and quality enhancers
   let enhancedQuery = prompt;
-  if (style === "neoclassical-allegory") {
+  if (style === "chatgpt-mindmap" || style === "mind map" || style === "mind-map") {
+    enhancedQuery = `Professional ChatGPT DALL-E 3 style conceptual mind map diagram for ${prompt}. Radiating outward from a glowing central concept core with organic curved branching pathways, sleek rounded pill-shaped subtopic cards, minimalist modern iconography, clean typographic hierarchy, elegant vector aesthetic, balanced composition, 8k resolution, award-winning infographic layout`;
+  } else if (style === "chatgpt-flowchart" || style === "flowchart") {
+    enhancedQuery = `ChatGPT DALL-E 3 style clean modern process flowchart of ${prompt}. Step-by-step horizontal and vertical pipeline layout, sleek rounded process cards, decision diamonds, glowing directional connector arrows, status tags, tech UI aesthetic, clean background, 8k crisp resolution`;
+  } else if (style === "chatgpt-infographic" || style === "infographic") {
+    enhancedQuery = `Modern editorial infographic in the signature style of ChatGPT DALL-E 3 explaining ${prompt}. Highly structured magazine layout with modular bento-style info cards, key metrics, sleek vector icons, vibrant modern color palette, high-contrast readable elements, crisp 8k resolution`;
+  } else if (style === "neoclassical-allegory") {
     enhancedQuery = `Neoclassical Enlightenment oil painting of ${prompt}, style of Jean-Baptiste Regnault and Jacques-Louis David, allegorical figures of Reason and Truth, winged genius with flaming head, classical drapery, dramatic chiaroscuro, celestial clouds, museum canvas, 8k resolution`;
   } else if (!prompt.toLowerCase().includes("masterpiece") && !prompt.toLowerCase().includes("diagram")) {
     enhancedQuery = `Educational illustration of ${prompt}, highly detailed, sharp crisp focus, 8k resolution, textbook clarity, studio lighting, no blur, high quality visual`;
@@ -1518,36 +1733,58 @@ app.post("/api/generate-flashcards", async (req, res) => {
 });
 
 
-// API Endpoint to generate SVG infographics / mind maps
+// API Endpoint to generate ChatGPT-style infographics, mind maps & flowcharts
 app.post("/api/generate-infographic", async (req, res) => {
   try {
-    const { topic, type } = req.body;
+    const { topic, type = "mind map", format = "both", aspectRatio = "16:9" } = req.body;
     if (!topic) {
       res.status(400).json({ error: "Topic is required" });
       return;
     }
     
-    const ai = getAiClient();
-    
-    const systemInstruction = "You are an expert data visualization designer. You generate beautiful, clean, responsive SVG code for educational mind maps and infographics. Use modern colors (blue, purple, emerald), drop shadows, and clean typography (sans-serif). Return ONLY valid SVG code, no markdown wrapping, no extra text.";
-    
-    const prompt = `Generate a highly visual, professional ${type || 'mind map'} about: "${topic}". Make it structured with nodes and connecting lines. Ensure the viewBox is large enough (e.g., viewBox="0 0 800 600") and elements are well-spaced.`;
+    // 1. Generate ChatGPT DALL-E 3 style visual image via Nano Banana Engine
+    const imageStyle = type.toLowerCase().includes("flow") 
+      ? "chatgpt-flowchart" 
+      : type.toLowerCase().includes("mind") 
+        ? "chatgpt-mindmap" 
+        : "chatgpt-infographic";
+        
+    const nanoBananaVisual = await generateNanoBananaFreeImage(
+      `${type} explaining ${topic}`, 
+      aspectRatio, 
+      imageStyle
+    );
 
-    const response = await generateContentWithResilience(ai, {
-      model: "gemini-2.5-flash",
-      contents: prompt,
-      config: {
-        systemInstruction,
-        temperature: 0.2
-      }
+    // 2. Generate precision SVG vector code via Gemini
+    let svgData = "";
+    try {
+      const ai = getAiClient();
+      const systemInstruction = "You are an elite data visualization designer. You generate beautiful, clean, responsive SVG code for educational mind maps, flowcharts, and infographics. Use modern color palettes (vibrant blues, purples, emeralds), glowing nodes, sleek rounded card bubbles, drop shadows, and clean typography (system-ui, sans-serif). Return ONLY valid SVG code, no markdown wrapping, no extra text.";
+      const prompt = `Generate a highly visual, professional ${type} about: "${topic}". Make it structured with an aesthetic central or root node, elegant connector paths, and detailed subtopic cards. Ensure the viewBox is large enough (viewBox="0 0 960 640") and elements are well-spaced.`;
+
+      const response = await generateContentWithResilience(ai, {
+        model: "gemini-2.5-flash",
+        contents: prompt,
+        config: {
+          systemInstruction,
+          temperature: 0.2
+        }
+      });
+
+      svgData = (response.text || "").replace(/```(xml|svg|html)?\n/g, '').replace(/```/g, '').trim();
+    } catch (svgErr) {
+      console.warn("SVG generation notice:", svgErr);
+    }
+
+    res.json({ 
+      success: true,
+      topic,
+      type,
+      imageUrl: nanoBananaVisual.url,
+      svg: svgData,
+      modelUsed: "Nano Banana Visual Engine (ChatGPT DALL-E 3 Style) + Gemini Vector SVG"
     });
-
-    let svgData = response.text || "";
-    // Clean up if it wrapped in markdown
-    svgData = svgData.replace(/```(xml|svg|html)?\n/g, '').replace(/```/g, '').trim();
-
-    res.json({ svg: svgData });
-  } catch (error) {
+  } catch (error: any) {
     res.status(500).json({ 
        error: "Failed to generate infographic", 
        details: (error.message || String(error)).includes("429") || (error.message || String(error)).includes("quota") ? "API Key Quota Exceeded. Please check your billing details or upgrade to a paid tier." : error.message || String(error)
@@ -2530,7 +2767,7 @@ Evaluate if the student's answer is correct or partially correct. Provide encour
 
       let generatedData = null;
 
-      if (process.env.GEMINI_API_KEY) {
+      if (geminiKeyPool.getKeyCount() > 0) {
         try {
           const ai = getAiClient();
           const systemInstruction = 
@@ -2790,22 +3027,105 @@ Evaluate if the student's answer is correct or partially correct. Provide encour
           break;
       }
 
+      // Real-World Personality Profile Enhancer
+      let personalityPersonaGuide = "";
+      const lowerName = mentorName.toLowerCase();
+      if (lowerName.includes("feynman")) {
+        personalityPersonaGuide = 
+          "AUTHENTIC RICHARD FEYNMAN PERSONA:\n" +
+          "- Speak in Feynman's vibrant, joyful, conversational tone. Strip away hollow academic terminology.\n" +
+          "- Use mechanical analogies (spinning wheels, clocks, jiggling atoms, rubber bands, waves on water).\n" +
+          "- Draw an imaginary 'Feynman diagram' or physical picture in the student's mind.\n" +
+          "- Remind the student: 'Don't memorize names; observe what happens in physical reality.'\n";
+      } else if (lowerName.includes("einstein")) {
+        personalityPersonaGuide = 
+          "AUTHENTIC ALBERT EINSTEIN PERSONA:\n" +
+          "- Speak with gentle wonder, philosophical depth, and deep reverence for the harmonies of nature.\n" +
+          "- Frame the concept around a vivid Gedankenexperiment (thought experiment)—e.g. riding a light beam, accelerating in an elevator in deep space, or synchronization of clocks on moving trains.\n" +
+          "- Show how invariant symmetries and simplicity govern the physical universe.\n";
+      } else if (lowerName.includes("newton")) {
+        personalityPersonaGuide = 
+          "AUTHENTIC SIR ISAAC NEWTON PERSONA:\n" +
+          "- Speak with monumental mathematical authority and geometric clarity.\n" +
+          "- Deduce conclusions from first principles and laws of force, fluxions, and inverse-square gravitation.\n" +
+          "- Emphasize empirical observation joined with rigorous mathematical proof.\n";
+      } else if (lowerName.includes("curie")) {
+        personalityPersonaGuide = 
+          "AUTHENTIC MARIE CURIE PERSONA:\n" +
+          "- Speak with patient dedication, fearless curiosity, and meticulous empirical precision.\n" +
+          "- Reference experimental laboratory insights: ionizing radiation, electrometer measurements, half-lives, and atomic decay kinetics.\n" +
+          "- Instill scientific courage: 'Nothing in life is to be feared; it is only to be understood.'\n";
+      } else if (lowerName.includes("ramanujan")) {
+        personalityPersonaGuide = 
+          "AUTHENTIC SRINIVASA RAMANUJAN PERSONA:\n" +
+          "- Speak with profound intuitive warmth and love for the spiritual beauty of numbers.\n" +
+          "- Reveal unexpected patterns, infinite series symmetries, continued fraction identities, and arithmetic harmonies.\n" +
+          "- Guide the student to see numbers not as dead symbols, but as vibrant, interconnected entities.\n";
+      } else if (lowerName.includes("euler")) {
+        personalityPersonaGuide = 
+          "AUTHENTIC LEONHARD EULER PERSONA:\n" +
+          "- Speak with prolific enthusiasm, constructive mathematical playfulness, and brilliant algebraic dexterity.\n" +
+          "- Connect disparate branches of mathematics (geometry, calculus, complex numbers, series).\n" +
+          "- Show how elegant notation unlocks effortless derivations.\n";
+      } else if (lowerName.includes("polya") || lowerName.includes("pólya")) {
+        personalityPersonaGuide = 
+          "AUTHENTIC GEORGE PÓLYA PERSONA:\n" +
+          "- Speak as the master coach of mathematical heuristics from Stanford.\n" +
+          "- Walk the student through the 4 Stages of Problem Solving: 1) Understand the Problem, 2) Devise a Plan, 3) Carry Out the Plan, 4) Look Back & Generalize.\n" +
+          "- Ask: 'Can you restate the problem? Can you solve an easier, related problem first?'\n";
+      } else if (lowerName.includes("turing")) {
+        personalityPersonaGuide = 
+          "AUTHENTIC ALAN TURING PERSONA:\n" +
+          "- Speak with analytical lucidity and foundational computational curiosity.\n" +
+          "- Frame computational problems in terms of discrete state machines, symbols on a tape, decision limits, and algorithmic complexity.\n" +
+          "- Explore the boundary between mechanical computation and human intuition.\n";
+      } else if (lowerName.includes("darwin")) {
+        personalityPersonaGuide = 
+          "AUTHENTIC CHARLES DARWIN PERSONA:\n" +
+          "- Speak as the observant, humble naturalist who traveled on HMS Beagle.\n" +
+          "- Ground concepts in vivid ecological observations from nature (island finch beaks, orchids, coral reefs, selective breeding).\n" +
+          "- Show how small variations over vast geological time generate the splendid diversity of living forms.\n";
+      } else if (lowerName.includes("sagan")) {
+        personalityPersonaGuide = 
+          "AUTHENTIC CARL SAGAN PERSONA:\n" +
+          "- Speak with poetic awe, cosmological perspective, and passionate scientific skepticism.\n" +
+          "- Use the Baloney Detection Kit to dissect assumptions and celebrate the scientific method as a candle in the dark.\n" +
+          "- Connect local planetary and terrestrial phenomena to the grand 13.8-billion-year cosmic tapestry.\n";
+      } else if (lowerName.includes("franklin")) {
+        personalityPersonaGuide = 
+          "AUTHENTIC DR. ROSALIND FRANKLIN PERSONA:\n" +
+          "- Speak with sharp analytical precision, refusing speculation that is ungrounded in physical evidence.\n" +
+          "- Teach molecular geometry, X-ray diffraction patterns, antiparallel helical symmetry, and nucleotide stereochemistry with uncompromising clarity.\n";
+      } else if (lowerName.includes("chandrasekhar")) {
+        personalityPersonaGuide = 
+          "AUTHENTIC DR. SUBRAHMANYAN CHANDRASEKHAR PERSONA:\n" +
+          "- Speak with quiet dignity, relativistic mathematical rigor, and astrophysical wonder.\n" +
+          "- Balance quantum electron degeneracy pressure with relativistic gravity to illuminate the life and death of stars.\n";
+      } else if (lowerName.includes("aristotle")) {
+        personalityPersonaGuide = 
+          "AUTHENTIC ARISTOTLE OF STAGIRA PERSONA:\n" +
+          "- Speak with rigorous teleological clarity, dissecting claims into categorical syllogisms, material/formal/efficient/final causes, and first principles.\n" +
+          "- Distinguish between valid logical structure and factual truth.\n";
+      }
+
       const systemInstruction = 
         `You are ${mentorName}, ${title} in ${subject} (${subDiscipline}).\n` +
         `Your teaching philosophy: "${motto}".\n` +
         `Your signature pedagogical style: ${teachingStyle}.\n` +
         `Your core domain specialties: ${Array.isArray(specialties) ? specialties.join(", ") : specialties}.\n\n` +
-        `CRITICAL TEACHING MANDATE — TEACH WITH SUPREME CLARITY:\n` +
-        `Students come to you because other explanations were confusing, robotic, or overly dense.\n` +
-        `Your absolute duty is to make the subject crystal-clear and intellectually exciting.\n\n` +
+        `${personalityPersonaGuide}\n` +
+        `CRITICAL TEACHING MANDATE — AUTHENTIC REAL-WORLD PERSONALITY & REAL KNOWLEDGE:\n` +
+        `You are NOT a generic text bot. You are the authentic historical giant teaching REAL, verifiable, rigorous scientific knowledge.\n` +
+        `Bring your actual personality, historical insights, famous analogies, and deep mastery of nature to every sentence.\n` +
+        `Your absolute duty is to make the subject crystal-clear, unforgettable, and intellectually thrilling.\n\n` +
         `STRUCTURE YOUR LESSON ACCORDING TO THESE SECTIONS:\n` +
-        `1. 🌟 **The Core Intuition First**: Explain the concept in simple, natural English. Use a brilliant mental model or analogy.\n` +
-        `2. 🔍 **Mechanism & Step-by-Step Breakdown**: Detail how and why it works. If mathematics is involved, explain what each symbol physically represents.\n` +
-        `3. 💡 **Concrete Worked Example**: Show a tangible, specific problem or scenario with actual values, clear calculations, or chemical/biological steps.\n` +
-        `4. ⚠️ **The #1 Trap to Avoid**: Warn the student about the most common misunderstanding or exam error.\n` +
-        `5. 🎯 **Quick Check for Understanding**: Ask one friendly, thought-provoking question to verify they truly grasped it.\n\n` +
+        `1. 🌟 **The Core Intuition First**: Explain the concept in your signature voice. Use a brilliant real-world mental model or thought experiment.\n` +
+        `2. 🔍 **Mechanism & Step-by-Step Breakdown**: Detail how and why it works in reality. If mathematics or chemistry is involved, explain what each symbol or bond physically represents in nature.\n` +
+        `3. 💡 **Concrete Worked Example**: Show a tangible, specific problem or scenario with actual numbers, clear calculations, or verified cellular/physical steps.\n` +
+        `4. ⚠️ **The #1 Real-World Trap to Avoid**: Warn the student about the most common misconception that trips up beginners or exam candidates.\n` +
+        `5. 🎯 **Quick Check for Understanding**: Ask one friendly, thought-provoking question in your personal voice to verify they truly grasped the idea.\n\n` +
         `${clarityGuidance}\n` +
-        `Tone: Warm, inspiring, intellectually generous, authoritative yet completely accessible. Never leave the student confused.`;
+        `Tone: Authentic to your historical personality, inspiring, intellectually generous, authoritative yet completely accessible. Never leave the student confused.`;
 
       // Build conversation turns
       const conversationHistory = Array.isArray(history) && history.length > 0
@@ -2816,7 +3136,7 @@ Evaluate if the student's answer is correct or partially correct. Provide encour
         ? `Previous Mentorship Discussion:\n${conversationHistory}\n\nStudent's New Question: "${cleanQ}"\n\nPlease teach this topic with supreme clarity.`
         : `Student asks: "${cleanQ}"\n\nPlease teach this topic with supreme clarity.`;
 
-      if (process.env.GEMINI_API_KEY) {
+      if (geminiKeyPool.getKeyCount() > 0) {
         try {
           const ai = getAiClient();
           const response = await generateContentWithResilience(ai, {
@@ -2917,7 +3237,7 @@ Let us apply this with specific parameters:
       const cleanPrompt = prompt.trim();
       let generatedApp: any = null;
 
-      if (process.env.GEMINI_API_KEY) {
+      if (geminiKeyPool.getKeyCount() > 0) {
         try {
           const ai = getAiClient();
           const systemInstruction = 
@@ -3334,7 +3654,7 @@ Active File: ${activeFile}
 Please analyze this code thoroughly and return the JSON object.`;
 
       let aiResponseText = "";
-      if (process.env.GEMINI_API_KEY) {
+      if (geminiKeyPool.getKeyCount() > 0) {
         try {
           const ai = getAiClient();
           const response = await generateContentWithResilience(ai, {

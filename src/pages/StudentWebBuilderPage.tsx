@@ -3,7 +3,7 @@ import {
   Globe, Laptop, Tablet, Smartphone, Maximize2, Minimize2, 
   Sparkles, Download, Wand2, Palette, Layers, RefreshCw, 
   Check, Share2, Eye, Play, Undo, ExternalLink, HelpCircle,
-  Rocket, Users, Cloud
+  Rocket, Users, Cloud, FolderOpen, Terminal
 } from 'lucide-react';
 import { 
   StudentWebsiteConfig, WebBlock, WebBlockType, ThemeId, FontId 
@@ -28,6 +28,9 @@ import {
 } from '../services/firebaseWebBuilderService';
 import { PublishModal } from '../components/lovable/PublishModal';
 import { SharedWorkspaceModal } from '../components/lovable/SharedWorkspaceModal';
+import { VirtualConsolePane, ConsoleLogMessage } from '../components/webBuilder/VirtualConsolePane';
+import { AICodeAssistantModal } from '../components/webBuilder/AICodeAssistantModal';
+import { TemplatesLibraryModal, StarterTemplate } from '../components/webBuilder/TemplatesLibraryModal';
 
 type DeviceMode = 'desktop' | 'tablet' | 'mobile';
 
@@ -68,6 +71,23 @@ export default function StudentWebBuilderPage() {
   // Firebase Hosting Publish & Shared Workspace Realtime DB state
   const [showPublishModal, setShowPublishModal] = useState<boolean>(false);
   const [showSharedWorkspaceModal, setShowSharedWorkspaceModal] = useState<boolean>(false);
+  const [showTemplatesModal, setShowTemplatesModal] = useState<boolean>(false);
+  const [showAICodeAssistantModal, setShowAICodeAssistantModal] = useState<boolean>(false);
+  const [showConsole, setShowConsole] = useState<boolean>(false);
+  const [consoleLogs, setConsoleLogs] = useState<ConsoleLogMessage[]>([
+    {
+      id: 'init-1',
+      level: 'info',
+      message: '[Virtual Runtime Environment: Student Web Builder active]',
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+    },
+    {
+      id: 'init-2',
+      level: 'log',
+      message: `Loaded "${siteConfig.siteTitle}" • Theme: ${siteConfig.theme} • Ready for code & preview`,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+    }
+  ]);
   const [sharedRoomId, setSharedRoomId] = useState<string | null>(() => {
     try {
       const p = new URLSearchParams(window.location.search);
@@ -120,7 +140,59 @@ export default function StudentWebBuilderPage() {
     return () => clearInterval(interval);
   }, [siteConfig, lastSavedSnapshot, profile]);
 
-  // Auto-save to localStorage
+  // REPL command execution inside student runtime environment
+  const handleExecuteCommand = (cmd: string) => {
+    try {
+      setConsoleLogs(prev => [
+        ...prev,
+        {
+          id: 'cmd-' + Date.now(),
+          level: 'info',
+          message: '› ' + cmd,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+        }
+      ]);
+      const result = window.eval(cmd);
+      if (result !== undefined) {
+        setConsoleLogs(prev => [
+          ...prev,
+          {
+            id: 'res-' + Date.now(),
+            level: 'log',
+            message: '<= ' + (typeof result === 'object' ? JSON.stringify(result) : String(result)),
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+          }
+        ]);
+      }
+    } catch (err: any) {
+      setConsoleLogs(prev => [
+        ...prev,
+        {
+          id: 'err-' + Date.now(),
+          level: 'error',
+          message: '[REPL Error]: ' + (err?.message || err),
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+        }
+      ]);
+    }
+  };
+
+  // Handle template selection from Starter Templates Modal
+  const handleSelectStarterTemplate = (template: StarterTemplate, mode: 'replace' | 'merge') => {
+    localStorage.setItem('lumora_lovable_project_v1', JSON.stringify({
+      id: 'proj-' + Date.now(),
+      title: template.title,
+      description: template.tagline,
+      html: template.html,
+      css: template.css,
+      js: template.js,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      version: 1
+    }));
+    setBuilderMode('lovable');
+    setShowTemplatesModal(false);
+  };
   useEffect(() => {
     try {
       localStorage.setItem('lumora_student_website_v1', JSON.stringify(siteConfig));
@@ -436,6 +508,47 @@ export default function StudentWebBuilderPage() {
             </span>
           </div>
 
+          {/* Templates Library Button */}
+          <button
+            onClick={() => setShowTemplatesModal(true)}
+            className="px-3 py-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold flex items-center gap-1.5 hover:border-slate-400 transition-all shadow-xs"
+            title="Browse Starter Templates (HTML/CSS Landing, React Component, Canvas Arcade, Audio Synth)"
+          >
+            <FolderOpen className="w-3.5 h-3.5 text-amber-500" />
+            <span className="hidden md:inline">Templates</span>
+          </button>
+
+          {/* AI Code Assistant Button */}
+          <button
+            onClick={() => setShowAICodeAssistantModal(true)}
+            className="px-3 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-xs flex items-center gap-1.5 shadow-md shadow-indigo-600/25 active:scale-95 transition-all"
+            title="AI Code Assistant (Fix bugs, refactor, and optimize code with Gemini)"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+            <span className="hidden sm:inline">AI Assistant</span>
+          </button>
+
+          {/* Virtual Console Toggle */}
+          <button
+            onClick={() => setShowConsole(!showConsole)}
+            className={`px-3 py-2 rounded-xl text-xs font-bold border flex items-center gap-1.5 transition-all ${
+              showConsole
+                ? 'bg-indigo-600 text-white border-indigo-600 shadow-md'
+                : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:border-slate-400'
+            }`}
+            title="Toggle Virtual Console Output and Errors"
+          >
+            <Terminal className="w-3.5 h-3.5 text-cyan-500" />
+            <span className="hidden md:inline">Console</span>
+            {consoleLogs.some(l => l.level === 'error') ? (
+              <span className="px-1.5 py-0.2 rounded-full bg-rose-500 text-[9px] font-bold text-white leading-none">
+                {consoleLogs.filter(l => l.level === 'error').length}
+              </span>
+            ) : (
+              <span className="text-[10px] text-slate-400">({consoleLogs.length})</span>
+            )}
+          </button>
+
           {/* Shared Workspace Button (Firebase Realtime Database) */}
           <button
             onClick={() => setShowSharedWorkspaceModal(true)}
@@ -596,6 +709,16 @@ export default function StudentWebBuilderPage() {
         )}
       </div>
 
+      {/* Virtual Console Pane at bottom of StudentWebBuilderPage */}
+      <VirtualConsolePane
+        logs={consoleLogs}
+        onClear={() => setConsoleLogs([])}
+        onExecuteCommand={handleExecuteCommand}
+        isOpen={showConsole}
+        onToggle={() => setShowConsole(!showConsole)}
+        maxHeight="200px"
+      />
+
       {/* Export & Download Code Modal */}
       {showExportModal && (
         <ExportCodeModal
@@ -674,6 +797,47 @@ export default function StudentWebBuilderPage() {
               });
             }
           }}
+        />
+      )}
+      {/* Starter Templates Library Modal */}
+      {showTemplatesModal && (
+        <TemplatesLibraryModal
+          onSelectTemplate={handleSelectStarterTemplate}
+          onClose={() => setShowTemplatesModal(false)}
+        />
+      )}
+
+      {/* AI Code Assistant Modal (Gemini Powered) */}
+      {showAICodeAssistantModal && (
+        <AICodeAssistantModal
+          html={`<div class="theme-${siteConfig.theme} min-h-screen p-8 max-w-4xl mx-auto space-y-6 text-slate-100">
+  <div class="p-8 rounded-3xl bg-slate-900/80 border border-slate-800 space-y-3">
+    <h1 class="text-3xl font-black text-white">${siteConfig.siteTitle}</h1>
+    <p class="text-sm text-indigo-300">Created by @${siteConfig.studentHandle || 'student'}</p>
+  </div>
+  ${siteConfig.blocks.map(b => `<!-- Block: ${b.type} -->\n<div id="${b.id}" class="block-card p-6 bg-slate-900 border border-slate-800 rounded-2xl">\n  <h3>${b.title || b.type}</h3>\n</div>`).join('\n')}
+</div>`}
+          css={`/* Theme: ${siteConfig.theme} */\n.block-card { transition: all 0.3s ease; }\n.block-card:hover { transform: translateY(-4px); }`}
+          js={`console.log("Interactive student app initialized with ${siteConfig.blocks.length} blocks");`}
+          activeFile="all"
+          onApplyCode={(updated) => {
+            if (updated.html || updated.css || updated.js) {
+              localStorage.setItem('lumora_lovable_project_v1', JSON.stringify({
+                id: 'proj-' + Date.now(),
+                title: siteConfig.siteTitle,
+                description: 'Imported from block builder with AI assistant refinements',
+                html: updated.html || '',
+                css: updated.css || '',
+                js: updated.js || '',
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+                version: 1
+              }));
+              setBuilderMode('lovable');
+              setShowAICodeAssistantModal(false);
+            }
+          }}
+          onClose={() => setShowAICodeAssistantModal(false)}
         />
       )}
     </div>

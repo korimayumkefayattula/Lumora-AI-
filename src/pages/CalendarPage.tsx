@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Plus, Clock, Bookmark, Filter, CheckCircle2 } from 'lucide-react';
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Plus, Clock, Bookmark, Filter, CheckCircle2, Sparkles } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { GoogleCalendarPanel } from '../components/workspace/GoogleCalendarPanel';
+import { useNavigate } from 'react-router-dom';
 
 interface CalendarEvent {
   id: string;
@@ -11,6 +14,9 @@ interface CalendarEvent {
 }
 
 export default function CalendarPage() {
+  const navigate = useNavigate();
+  const { workspaceToken, requestWorkspaceAccess } = useAuth();
+  const [showGoogleCalendar, setShowGoogleCalendar] = useState(true);
   const [currentMonth, setCurrentMonth] = useState('March 2026');
   const [selectedDate, setSelectedDate] = useState('2026-03-15');
   const [events, setEvents] = useState<CalendarEvent[]>([
@@ -52,6 +58,23 @@ export default function CalendarPage() {
           <h1 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
             Interactive Academic Calendar
           </h1>
+        </div>
+
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={() => setShowGoogleCalendar(!showGoogleCalendar)}
+            className="px-3.5 py-2 rounded-xl border border-blue-200 dark:border-blue-900/60 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-bold text-xs hover:bg-blue-100 transition-colors flex items-center gap-1.5"
+          >
+            <CalendarIcon className="w-3.5 h-3.5" />
+            <span>{showGoogleCalendar ? 'Hide Google Calendar' : 'Show Google Calendar'}</span>
+          </button>
+          <button
+            onClick={() => navigate('/student/workspace')}
+            className="px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs shadow-sm transition-all flex items-center gap-1.5"
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Google Workspace Suite</span>
+          </button>
         </div>
       </div>
 
@@ -171,6 +194,16 @@ export default function CalendarPage() {
         </div>
 
       </div>
+
+      {/* Google Calendar Bi-Directional Synchronization Panel */}
+      {showGoogleCalendar && (
+        <div className="pt-2">
+          <GoogleCalendarPanel
+            token={workspaceToken}
+            onRequestAuth={requestWorkspaceAccess}
+          />
+        </div>
+      )}
     </div>
   );
 }
