@@ -41,12 +41,14 @@ import {
   ChevronDown,
   ChevronUp,
   Zap,
-  Shield
+  Shield,
+  Video
 } from "lucide-react";
 import { Subject, StudyTask } from "../types";
 import confetti from "canvas-confetti";
 import jsPDF from "jspdf";
 import { useStudentProfile } from "../context/StudentProfileContext";
+import { getBookmarkedVideoIds } from "../services/agnesVideoService";
 import StudyStats from "../components/StudyStats";
 import TaskTracker from "../components/TaskTracker";
 import SmartCalendar from "../components/SmartCalendar";
@@ -696,6 +698,89 @@ export default function StudentDashboard() {
         {/* Compact Quick Capture Widget for Google Keep Notes */}
         <div className="mb-8">
           <QuickCaptureKeepWidget userId={user?.uid || null} />
+        </div>
+
+        {/* Agnes Video AI Tough Topics Spotlight Banner */}
+        {(() => {
+          const savedCount = getBookmarkedVideoIds().length;
+          return (
+            <div
+              onClick={() => navigate('/student/agnes-videos')}
+              className="mb-8 p-5 rounded-3xl bg-gradient-to-r from-rose-950/70 via-slate-900 to-indigo-950/70 border border-rose-500/30 hover:border-rose-400/60 shadow-lg hover:shadow-rose-500/10 transition-all cursor-pointer group flex flex-col md:flex-row md:items-center justify-between gap-4"
+            >
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-rose-500 to-amber-500 flex items-center justify-center shrink-0 text-white shadow-md shadow-rose-500/20 group-hover:scale-105 transition-transform">
+                  <Video className="w-6 h-6 stroke-[2.5]" />
+                </div>
+                <div>
+                  <div className="flex flex-wrap items-center gap-2 mb-1">
+                    <span className="px-2 py-0.5 rounded-full bg-rose-500/20 border border-rose-400/40 text-rose-300 text-[10px] font-extrabold tracking-wider uppercase flex items-center gap-1 font-mono">
+                      <Sparkles className="w-2.5 h-2.5 text-amber-400" />
+                      AGNES VIDEO AI
+                    </span>
+                    <span className="text-[11px] text-amber-300 font-semibold font-mono">
+                      Tough Topics Demystified
+                    </span>
+                    {savedCount > 0 && (
+                      <span className="px-2 py-0.5 rounded-full bg-rose-500/30 border border-rose-400/50 text-rose-200 text-[10px] font-bold flex items-center gap-1 font-mono">
+                        <Heart className="w-2.5 h-2.5 fill-current text-rose-400" />
+                        {savedCount} Favorited
+                      </span>
+                    )}
+                  </div>
+                  <h3 className="text-base font-extrabold text-white group-hover:text-amber-300 transition-colors">
+                    Dr. Agnes Vance: Master AI Concept Explainer
+                  </h3>
+                  <p className="text-xs text-slate-300 line-clamp-1">
+                    Struggling with Quantum Superposition, SN1 vs SN2, Relativity, or Transformer Attention? Watch cinematic chalkboard videos with live animated simulations, favorite tough topics, and download study packs.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <span className="text-xs font-bold px-3 py-1.5 rounded-xl bg-rose-500/20 text-rose-200 border border-rose-500/40 group-hover:bg-rose-500 group-hover:text-white transition-all flex items-center gap-1.5">
+                  <span>Watch Agnes Explain</span>
+                  <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                </span>
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* 20 Extra Features & Personalized Learning Suite Spotlight Card */}
+        <div
+          onClick={() => navigate('/student/extra-features')}
+          className="mb-8 p-5 rounded-3xl bg-gradient-to-r from-purple-950/70 via-indigo-950/60 to-slate-900 border border-purple-500/30 hover:border-purple-400/60 shadow-lg hover:shadow-purple-500/10 transition-all cursor-pointer group flex flex-col md:flex-row md:items-center justify-between gap-4"
+        >
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center shrink-0 text-white shadow-md shadow-purple-600/20 group-hover:scale-105 transition-transform">
+              <Sparkles className="w-6 h-6 stroke-[2.5]" />
+            </div>
+            <div>
+              <div className="flex flex-wrap items-center gap-2 mb-1">
+                <span className="px-2 py-0.5 rounded-full bg-purple-500/20 border border-purple-400/40 text-purple-300 text-[10px] font-extrabold tracking-wider uppercase flex items-center gap-1 font-mono">
+                  <Target className="w-2.5 h-2.5 text-amber-400" />
+                  LUMORAAI 20 EXTRA FEATURES
+                </span>
+                <span className="text-[11px] text-amber-300 font-semibold font-mono">
+                  Ask → Understand → Practice → Correct → Revise → Improve
+                </span>
+              </div>
+              <h3 className="text-base font-extrabold text-white group-hover:text-purple-300 transition-colors">
+                Complete Academic Suite: Strategy Coach, Mistake Analyzer, Socratic Tutor & Viva Practice
+              </h3>
+              <p className="text-xs text-slate-300 line-clamp-1">
+                Access all 20 personalized features: Exam Strategy Coach, Answer Quality Checker, Textbook Companion, AI Oral Practice, Learning Paths, and Daily Revision.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="text-xs font-bold px-3.5 py-1.5 rounded-xl bg-purple-500/20 text-purple-200 border border-purple-500/40 group-hover:bg-purple-600 group-hover:text-white transition-all flex items-center gap-1.5">
+              <span>Open 20 Features</span>
+              <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+            </span>
+          </div>
         </div>
 
         {/* ----------------------------------------------------------------- */}

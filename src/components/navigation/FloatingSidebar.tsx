@@ -60,6 +60,8 @@ export const NAV_GROUPS: NavGroup[] = [
     categoryKey: 'core',
     items: [
       { name: 'Dashboard', path: '/student', icon: Sparkles },
+      { name: 'Agnes Video AI', path: '/student/agnes-videos', icon: Video, badge: 'HOT' },
+      { name: '20 Features Suite', path: '/student/extra-features', icon: Target, badge: '20+' },
       { name: 'AI Faculty (1k+)', path: '/student/mentors', icon: Users, badge: '1000+' },
       { name: 'Concept Explorer', path: '/student/concept-explorer', icon: Compass, badge: 'New' },
       { name: 'Pro Upskilling', path: '/student/upskilling', icon: Video, badge: 'PRO' },

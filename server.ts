@@ -3762,6 +3762,506 @@ Please analyze this code thoroughly and return the JSON object.`;
     }
   });
 
+  // ==========================================
+  // AGNES VIDEO GENERATION & TOUGH TOPICS API
+  // ==========================================
+  app.post("/api/agnes-video/generate", async (req, res) => {
+    try {
+      const { topic, subject = "General STEM", difficulty = "High School (CBSE/AP/IB)", teachingStyle = "visual_analogy", sceneCount = 4 } = req.body;
+
+      if (!topic || !topic.trim()) {
+        return res.status(400).json({ error: "Topic is required for Agnes video generation." });
+      }
+
+      const prompt = `You are Dr. Agnes Vance, a world-class AI STEM Professor renowned for taking notoriously tough, brain-melting topics and breaking them down into crystal-clear, cinematic, step-by-step visual explainer videos.
+Create an in-depth video presentation for the tough topic: "${topic}".
+Subject: ${subject}
+Rigor/Audience: ${difficulty}
+Teaching Style: ${teachingStyle}
+Number of Scenes: ${sceneCount || 4}
+
+Requirements for each scene:
+1. "title": Catchy, descriptive chapter title.
+2. "durationSeconds": Estimated duration between 40 and 70 seconds.
+3. "visualType": One of "diagram", "analogy", "formula", "simulation", "breakdown", "comparison".
+4. "diagramType": One of "wave_interference", "relativity_grid", "chemical_mechanism", "orbital_hybrid", "dna_crispr", "krebs_cycle", "action_potential", "fourier_transform", "attention_matrix", "limit_epsilon_delta", "lenz_magnet", "entropy_box", "generic_flow".
+5. "diagramTitle": A concise 2-4 word title for the chalkboard diagram.
+6. "keyFormulaOrConcept": The central mathematical relationship or core mechanism string for this scene.
+7. "chalkboardPoints": 3 to 4 punchy, clear bullet points that Dr. Agnes writes on the chalkboard.
+8. "agnesNarration": 3-5 sentences of natural, engaging, articulate spoken narration by Dr. Agnes (written for text-to-speech audio). Speak with warmth, clarity, and deep intuition.
+9. "callout": An object with "title", "text", and "type" ('tip' | 'warning' | 'intuition' | 'formula').
+10. "quizCheckpoint" (on scene 3 or later): A multiple choice question to verify understanding with "question", 4 "options", "correctIndex" (0-3), and "explanation".
+
+Overall video properties:
+- "title": Compelling video title.
+- "hookSentence": Dramatic opening hook explaining why this concept is famous and fascinating.
+- "summaryTakeaways": 3 foundational takeaways.
+- "commonPitfalls": 2 traps students fall into on exams.
+- "examTip": 1 actionable scoring tip.
+- "tags": 3-5 keywords.
+
+Respond with strict, valid JSON matching this schema:
+{
+  "video": {
+    "id": "agnes_gen_${Date.now()}",
+    "topic": "${topic}",
+    "subject": "${subject}",
+    "title": "Video Title",
+    "hookSentence": "Opening hook",
+    "difficulty": "${difficulty}",
+    "estimatedDuration": "3m 45s",
+    "totalScenes": ${sceneCount || 4},
+    "scenes": [
+      {
+        "id": "scene-1",
+        "sceneNumber": 1,
+        "title": "Scene Title",
+        "durationSeconds": 50,
+        "visualType": "diagram",
+        "diagramType": "generic_flow",
+        "diagramTitle": "Diagram Title",
+        "keyFormulaOrConcept": "Formula",
+        "chalkboardPoints": ["Point 1", "Point 2", "Point 3"],
+        "callout": { "title": "Tip Title", "text": "Tip text", "type": "intuition" },
+        "agnesNarration": "Spoken words by Dr. Agnes..."
+      }
+    ],
+    "summaryTakeaways": ["Takeaway 1", "Takeaway 2", "Takeaway 3"],
+    "commonPitfalls": ["Pitfall 1", "Pitfall 2"],
+    "examTip": "Tip for exams",
+    "tags": ["tag1", "tag2"]
+  }
+}`;
+
+      const ai = getAiClient();
+      const response = await generateContentWithResilience(ai, {
+        model: "gemini-2.5-flash",
+        contents: prompt,
+        config: {
+          responseMimeType: "application/json"
+        }
+      });
+
+      const responseText = response.text || "";
+      let parsedData: any;
+      try {
+        parsedData = JSON.parse(responseText);
+      } catch (parseErr) {
+        const cleaned = responseText.replace(/```json/g, "").replace(/```/g, "").trim();
+        parsedData = JSON.parse(cleaned);
+      }
+
+      if (parsedData && parsedData.video) {
+        return res.json({ success: true, video: parsedData.video });
+      }
+
+      // If wrapped differently
+      return res.json({ success: true, video: parsedData });
+    } catch (err: any) {
+      console.error("Agnes Video generation error:", err);
+      return res.status(500).json({ error: "Failed to generate Agnes video", details: err?.message });
+    }
+  });
+
+  // Endpoint to answer real-time doubts during an Agnes Video lesson
+  app.post("/api/agnes-video/ask-doubt", async (req, res) => {
+    try {
+      const { topic, currentSceneTitle, sceneContext, studentDoubt } = req.body;
+
+      if (!studentDoubt || !studentDoubt.trim()) {
+        return res.status(400).json({ error: "Student doubt is required." });
+      }
+
+      const prompt = `You are Dr. Agnes Vance, the charismatic, encouraging AI STEM Professor from Lumora.
+The student is currently watching your video lesson on: "${topic}".
+Current Scene: "${currentSceneTitle}".
+Scene Context: "${sceneContext}".
+The student has paused the video and asked you this specific doubt:
+"${studentDoubt}"
+
+Respond in Dr. Agnes's voice:
+- Warm, direct, and illuminating.
+- Acknowledge why this is a smart or common question.
+- Use a vivid analogy or step-by-step mathematical logic to dissolve the confusion.
+- Keep the response to 2 to 3 concise, impactful paragraphs.
+- End with an encouraging closing note.
+
+Respond with JSON:
+{
+  "answer": "Your direct response as Dr. Agnes..."
+}`;
+
+      const ai = getAiClient();
+      const response = await generateContentWithResilience(ai, {
+        model: "gemini-2.5-flash",
+        contents: prompt,
+        config: {
+          responseMimeType: "application/json"
+        }
+      });
+
+      const responseText = response.text || "";
+      let parsed: any;
+      try {
+        parsed = JSON.parse(responseText);
+      } catch {
+        const cleaned = responseText.replace(/```json/g, "").replace(/```/g, "").trim();
+        parsed = JSON.parse(cleaned);
+      }
+
+      return res.json({ success: true, answer: parsed.answer || parsed.response || responseText });
+    } catch (err: any) {
+      console.error("Agnes doubt endpoint error:", err);
+      return res.status(500).json({ error: "Failed to answer doubt", details: err?.message });
+    }
+  });
+
+  // AI Topic Comparator Endpoint (Lumora Feature #10)
+  app.post("/api/topic-comparator", async (req, res) => {
+    try {
+      const { conceptA, conceptB, subject } = req.body;
+      if (!conceptA || !conceptB) {
+        return res.status(400).json({ error: "Both conceptA and conceptB are required." });
+      }
+
+      const prompt = `You are Dr. Agnes Vance, Master STEM Educator. A student is confusing two closely related concepts on an exam:
+Concept A: "${conceptA}"
+Concept B: "${conceptB}"
+Subject: "${subject || 'STEM'}"
+
+Analyze both concepts thoroughly and output a JSON object comparing them:
+{
+  "comparison": {
+    "id": "cmp_${Date.now()}",
+    "conceptA": "${conceptA}",
+    "conceptB": "${conceptB}",
+    "subject": "${subject || 'STEM'}",
+    "definitionA": "Precise, intuitive definition of Concept A",
+    "definitionB": "Precise, intuitive definition of Concept B",
+    "similarities": [
+      "Similarity 1",
+      "Similarity 2",
+      "Similarity 3"
+    ],
+    "keyDifferences": [
+      { "aspect": "Governing Mechanism", "conceptAValue": "...", "conceptBValue": "..." },
+      { "aspect": "Formulas / Variables", "conceptAValue": "...", "conceptBValue": "..." },
+      { "aspect": "Boundary Conditions", "conceptAValue": "...", "conceptBValue": "..." },
+      { "aspect": "Stereochemistry / Directionality", "conceptAValue": "...", "conceptBValue": "..." }
+    ],
+    "commonExamConfusions": [
+      "Common mistake 1 students make on exams",
+      "Common mistake 2"
+    ],
+    "agnesRuleOfThumb": "A clever, memorable rule or rhyme to never mix them up under exam pressure.",
+    "exampleDrill": {
+      "scenario": "A 1-sentence exam problem scenario",
+      "whichApplies": "Which concept applies here",
+      "why": "Brief 1-sentence reasoning"
+    }
+  }
+}`;
+
+      const ai = getAiClient();
+      const response = await generateContentWithResilience(ai, {
+        model: "gemini-2.5-flash",
+        contents: prompt,
+        config: {
+          responseMimeType: "application/json"
+        }
+      });
+
+      const responseText = response.text || "";
+      let parsed: any;
+      try {
+        parsed = JSON.parse(responseText);
+      } catch {
+        const cleaned = responseText.replace(/```json/g, "").replace(/```/g, "").trim();
+        parsed = JSON.parse(cleaned);
+      }
+
+      return res.json({ success: true, comparison: parsed.comparison || parsed });
+    } catch (err: any) {
+      console.error("Topic comparator error:", err);
+      return res.status(500).json({ error: "Failed to compare concepts", details: err?.message });
+    }
+  });
+
+  // Comprehensive Lumora 20 Extra Features AI Engine
+  app.post("/api/extra-features-ai", async (req, res) => {
+    try {
+      const { featureId, payload } = req.body;
+      if (!featureId) {
+        return res.status(400).json({ error: "featureId is required." });
+      }
+
+      let systemPrompt = "";
+      if (featureId === "exam_strategy_coach") {
+        systemPrompt = `You are an expert Academic Exam Strategist for LumoraAI.
+Analyze the student's exam profile:
+Exam Name/Date: ${payload.examName} on ${payload.examDate}
+Subjects: ${JSON.stringify(payload.subjects)}
+Weekly Study Hours: ${payload.weeklyHours}
+Target Score/Rank: ${payload.targetScore}
+Self-assessed Weak Topics: ${payload.weakTopics}
+
+Generate a comprehensive exam preparation strategy as JSON:
+{
+  "readinessScore": 78,
+  "highPriorityTopics": ["Topic 1", "Topic 2", "Topic 3"],
+  "weeklyMilestoneBreakdown": [
+    { "phase": "Weeks 1-2: Core Foundation & Weak Areas", "focus": "...", "targetHours": 14 },
+    { "phase": "Weeks 3-4: High-Yield Problem Drills", "focus": "...", "targetHours": 16 },
+    { "phase": "Final Sprint: Full Timed Mocks & Revision", "focus": "...", "targetHours": 12 }
+  ],
+  "dailyRoutineRecommendation": "Suggested breakdown of active recall vs problem solving",
+  "scoreBoosterAdvice": "3 high-impact strategic tips to gain an extra 15-20% marks"
+}`;
+      } else if (featureId === "mistake_analyzer") {
+        systemPrompt = `You are a precision Diagnostic Mistake Analyzer for STEM and Academic tests.
+Student submitted this question and their incorrect attempt:
+Subject: ${payload.subject}
+Question: ${payload.question}
+Student's Wrong Answer / Working: ${payload.wrongAnswer}
+Correct Answer (if known): ${payload.correctAnswer || "Not provided"}
+
+Diagnose and classify the root cause as JSON:
+{
+  "classification": "Conceptual Gap" | "Calculation Slip" | "Misreading Question" | "Formula Misapplication" | "Time Pressure",
+  "rootCauseAnalysis": "Clear 2-3 sentence explanation of where the exact breakdown occurred",
+  "underlyingPrinciple": "The key mathematical or physical law that was violated",
+  "stepByStepCorrection": ["Step 1...", "Step 2...", "Step 3..."],
+  "mirrorPracticeProblem": {
+    "question": "A similar question with different numbers to test if they fixed the gap",
+    "solution": "Brief answer & guidance"
+  },
+  "examTrapWarning": "What examiners intentionally set as distractors for this concept"
+}`;
+      } else if (featureId === "socratic_tutor") {
+        systemPrompt = `You are Socrates reimagined as an empathetic STEM Professor.
+The student is trying to understand or solve:
+Topic: ${payload.topic}
+Question/Doubt: ${payload.question}
+Previous Dialogue History: ${JSON.stringify(payload.history || [])}
+Student's Latest Response: "${payload.studentResponse || "I am stuck at the beginning"}"
+
+Do NOT give away the final answer! Lead them with a thought-provoking guiding question.
+Respond as JSON:
+{
+  "affirmation": "Encouraging acknowledgment of whatever logic they got right",
+  "guidingQuestion": "A targeted question that leads them to take the next logical step themselves",
+  "subtleHint": "A small clue or analogy if they are completely blank",
+  "progressPercent": 40
+}`;
+      } else if (featureId === "answer_quality_checker") {
+        systemPrompt = `You are a strict Board/University Exam Grader.
+Evaluate this student's draft answer before they submit:
+Question: ${payload.question}
+Marks Allocated: ${payload.marks} Marks
+Student's Written Draft:
+"${payload.draftAnswer}"
+
+Provide a constructive grading rubric and critique as JSON:
+{
+  "predictedScore": 7,
+  "maxScore": ${payload.marks || 10},
+  "scoreBreakdown": {
+    "conceptualCorrectness": "8/10",
+    "scientificTerminology": "7/10",
+    "structuralClarity": "8/10",
+    "diagramOrFormulaInclusion": "6/10"
+  },
+  "strengths": ["Well stated definitions", "Clear intro"],
+  "missingMarkScoringPoints": ["Missing key term 'Walden inversion'", "Didn't state units for constant k"],
+  "recommendedModelImprovements": "A polished rewrite of their answer that would secure full marks"
+}`;
+      } else if (featureId === "exam_answer_writer") {
+        systemPrompt = `You are an Exam Answer Architect.
+Create a structured model answer template for a specific mark allocation:
+Subject: ${payload.subject}
+Question: ${payload.question}
+Target Marks: ${payload.marks} Marks (e.g. 2 marks, 5 marks, 10 marks)
+
+Generate the ideal answer structure as JSON:
+{
+  "targetMarkLevel": "${payload.marks} Marks",
+  "timeAllocation": "Recommended minutes to spend on this question in the exam hall",
+  "requiredKeywords": ["Keyword 1", "Keyword 2", "Keyword 3"],
+  "recommendedStructure": [
+    { "section": "1. Direct Definition & Governing Law", "content": "..." },
+    { "section": "2. Formula / Derivation / Key Equation", "content": "..." },
+    { "section": "3. Diagram / Bulleted Explanation", "content": "..." },
+    { "section": "4. Boundary Conditions / Example", "content": "..." }
+  ],
+  "examinerChecklist": ["Did they underline key terms?", "Are units explicitly written?"]
+}`;
+      } else if (featureId === "oral_practice_viva") {
+        systemPrompt = `You are a prestigious Academic Viva-Voce Examiner.
+Topic: ${payload.topic}
+Examiner Question: ${payload.currentQuestion}
+Student's Spoken/Written Response: "${payload.studentAnswer}"
+
+Evaluate the student's oral answer and ask the next follow-up question as JSON:
+{
+  "verdict": "Excellent" | "Good" | "Partially Correct" | "Needs Clarification",
+  "accuracyRating": 85,
+  "feedback": "Concise verbal critique of their explanation, clarity, and terminology",
+  "betterWayToStateIt": "How a top researcher or topper would verbally answer",
+  "nextFollowUpQuestion": "A probing follow-up question to test their depth of understanding"
+}`;
+      } else if (featureId === "textbook_companion") {
+        systemPrompt = `You are an AI Textbook Companion that turns dense textbooks into clear learning layers.
+Chapter/Topic: ${payload.chapterTitle}
+Raw Text Content:
+"${payload.textExcerpt}"
+
+Extract and generate learning materials as JSON:
+{
+  "simplifiedSummary": "Plain-English explanation of the core concept without academic jargon",
+  "extractedDefinitions": [
+    { "term": "Term 1", "definition": "Clear concise definition" },
+    { "term": "Term 2", "definition": "Clear concise definition" }
+  ],
+  "realWorldAnalogies": ["Analogy 1 that makes this concept crystal clear"],
+  "quickCheckQuizzes": [
+    { "question": "Question 1", "options": ["A", "B", "C", "D"], "correct": 0, "explanation": "..." }
+  ],
+  "revisionFlashcards": [
+    { "front": "Prompt", "back": "Answer" }
+  ]
+}`;
+      } else if (featureId === "learning_path") {
+        systemPrompt = `You are a Curriculum Architect. Build a prerequisite-based route to master:
+Target Goal Topic: "${payload.goalTopic}"
+Current Student Level: "${payload.currentLevel || "High School / Beginner"}"
+
+Generate the learning route as JSON:
+{
+  "targetTopic": "${payload.goalTopic}",
+  "estimatedStudyHours": 18,
+  "stages": [
+    {
+      "step": 1,
+      "title": "Essential Prerequisites",
+      "topics": ["Prereq 1", "Prereq 2"],
+      "whyNeeded": "Why this must be mastered first",
+      "diagnosticCheckpoint": "Self-test question"
+    },
+    {
+      "step": 2,
+      "title": "Core Mechanics & Principles",
+      "topics": ["Core topic 1", "Core topic 2"],
+      "whyNeeded": "The central engine of the subject",
+      "diagnosticCheckpoint": "Self-test question"
+    },
+    {
+      "step": 3,
+      "title": "Advanced Applications & Problem Mastery",
+      "topics": ["Advanced 1", "Advanced 2"],
+      "whyNeeded": "Exam-level synthesis",
+      "diagnosticCheckpoint": "Self-test question"
+    }
+  ]
+}`;
+      } else if (featureId === "presentation_maker") {
+        systemPrompt = `You are an Academic Presentation Designer.
+Topic: "${payload.topic}"
+Academic Level: "${payload.level || "High School / Undergraduate"}"
+Slide Count: ${payload.slideCount || 6}
+
+Generate a presentation outline and slide deck as JSON:
+{
+  "title": "${payload.topic} - Presentation",
+  "targetAudience": "${payload.level}",
+  "slides": [
+    {
+      "slideNumber": 1,
+      "title": "Title / Hook",
+      "bulletPoints": ["Opening thought-provoking hook", "Scope of presentation"],
+      "speakerNotes": "What the student should say aloud",
+      "suggestedVisual": "Description of image or diagram for this slide"
+    },
+    {
+      "slideNumber": 2,
+      "title": "Core Mechanism",
+      "bulletPoints": ["Key concept 1", "Key concept 2"],
+      "speakerNotes": "Spoken explanation",
+      "suggestedVisual": "Flowchart / Diagram description"
+    }
+  ]
+}`;
+      } else if (featureId === "parent_learning_brief") {
+        systemPrompt = `You are a supportive Academic Counselor writing a weekly report for a student's parent.
+Student Activity Summary:
+Study Hours This Week: ${payload.studyHours || "8.5"} hrs
+Completed Tasks: ${payload.completedTasks || 14}
+Active Subjects: ${payload.subjects || "Physics, Chemistry, Math"}
+Strengths Shown: ${payload.strengths || "Strong consistency, high quiz accuracy in Thermodynamics"}
+Areas Needing Encouragement: ${payload.growthAreas || "Practice problems under time constraints"}
+
+Generate a warm, clear, actionable parent brief as JSON:
+{
+  "greeting": "Dear Parent / Guardian,",
+  "executiveSummary": "Positive overview of this week's learning effort and progress",
+  "keyMilestonesAchieved": ["Completed Organic Chemistry Module", "Maintained 5-day study streak"],
+  "focusAreasNextWeek": ["Preparing for Upcoming Calculus Mock"],
+  "howParentCanSupportAtHome": [
+    "Encourage a 10-minute break after 45 minutes of focus",
+    "Ask them to explain one interesting concept they learned at dinner"
+  ],
+  "confidenceMetric": "High & Steadily Growing"
+}`;
+      } else if (featureId === "study_routine_check") {
+        systemPrompt = `You are a Student Ergonomics & Study Routine Auditor.
+Analyze the student's study load:
+Daily Hours: ${payload.dailyHours} hrs
+Number of Subjects Packed per Day: ${payload.subjectsPerDay}
+Breaks Taken: ${payload.breaksTaken}
+Reported Fatigue: ${payload.fatigueLevel || "Moderate"}
+
+Generate workload recommendations as JSON:
+{
+  "burnoutRiskLevel": "Low" | "Moderate" | "High",
+  "workloadAnalysis": "Assessment of schedule sustainability",
+  "suggestedAdjustments": [
+    "Switch between problem-heavy and theory-heavy subjects to reduce mental fatigue",
+    "Implement 25-minute Pomodoro blocks with 5-minute movement breaks"
+  ],
+  "recommendedIdealSchedule": [
+    { "timeSlot": "Morning (9:00 - 11:30)", "activity": "High-cognitive load problem solving" },
+    { "timeSlot": "Afternoon (14:00 - 16:00)", "activity": "Conceptual reading & flashcard drills" },
+    { "timeSlot": "Evening (18:00 - 19:30)", "activity": "Review & light revision" }
+  ]
+}`;
+      } else {
+        systemPrompt = `You are LumoraAI Academic Assistant. Process this request for ${featureId}: ${JSON.stringify(payload)}. Respond with valid JSON.`;
+      }
+
+      const ai = getAiClient();
+      const response = await generateContentWithResilience(ai, {
+        model: "gemini-2.5-flash",
+        contents: systemPrompt,
+        config: {
+          responseMimeType: "application/json"
+        }
+      });
+
+      const responseText = response.text || "";
+      let parsed: any;
+      try {
+        parsed = JSON.parse(responseText);
+      } catch {
+        const cleaned = responseText.replace(/```json/g, "").replace(/```/g, "").trim();
+        parsed = JSON.parse(cleaned);
+      }
+
+      return res.json({ success: true, data: parsed });
+    } catch (err: any) {
+      console.error("Extra features AI error:", err);
+      return res.status(500).json({ error: "Failed to process feature", details: err?.message });
+    }
+  });
+
   app.get("/sites/:siteId", (req, res) => {
     const site = publishedSitesStore.get(req.params.siteId);
     if (!site) {

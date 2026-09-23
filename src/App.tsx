@@ -41,6 +41,8 @@ import PricingPage from "./pages/PricingPage";
 import StudentWebBuilderPage from "./pages/StudentWebBuilderPage";
 import UpskillingPage from "./pages/UpskillingPage";
 import GoogleWorkspaceHubPage from "./pages/GoogleWorkspaceHubPage";
+import AgnesVideoPage from "./pages/AgnesVideoPage";
+import ExtraFeaturesSuitePage from "./pages/ExtraFeaturesSuitePage";
 
 export default function App() {
   return (
@@ -55,6 +57,12 @@ export default function App() {
               <Route path="/student" element={<StudentLayout />}>
                 <Route index element={<StudentDashboard />} />
                 <Route path="concept-explorer" element={<ConceptExplorerPage />} />
+                <Route path="agnes-videos" element={<AgnesVideoPage />} />
+                <Route path="agnes" element={<AgnesVideoPage />} />
+                <Route path="extra-features" element={<ExtraFeaturesSuitePage />} />
+                <Route path="features-suite" element={<ExtraFeaturesSuitePage />} />
+                <Route path="20-features" element={<ExtraFeaturesSuitePage />} />
+                <Route path="suite" element={<ExtraFeaturesSuitePage />} />
                 <Route path="upskilling" element={<UpskillingPage />} />
                 <Route path="courses" element={<UpskillingPage />} />
                 <Route path="tutor" element={<AITutor />} />
