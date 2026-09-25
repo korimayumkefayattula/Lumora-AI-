@@ -48,12 +48,12 @@ export const WidgetContainer: React.FC<WidgetContainerProps> = ({
   return (
     <div
       id={id}
-      className={`rounded-3xl transition-all duration-300 overflow-hidden flex flex-col glass-panel ${
+      className={`clay-widget rounded-[16px] transition-all duration-300 overflow-hidden flex flex-col ${
         theme === 'focus'
-          ? 'text-amber-100 shadow-[0_16px_40px_-12px_rgba(0,0,0,0.6),inset_0_1.5px_2px_rgba(245,158,11,0.1)] hover:shadow-[0_20px_45px_-10px_rgba(0,0,0,0.7)]'
+          ? 'text-amber-100'
           : theme === 'dark'
-          ? 'text-slate-100 shadow-[0_20px_50px_-15px_rgba(0,0,0,0.7),inset_0_1.5px_2px_rgba(255,255,255,0.08)] hover:shadow-[0_25px_55px_-12px_rgba(0,0,0,0.85)]'
-          : 'text-slate-900 shadow-[0_18px_45px_-12px_rgba(0,0,0,0.1),inset_0_2px_3px_rgba(255,255,255,0.9)] hover:shadow-[0_22px_50px_-10px_rgba(0,0,0,0.14)]'
+          ? 'text-slate-100'
+          : 'text-slate-900'
       } ${isPinned ? 'ring-2 ring-indigo-500/50 dark:ring-rose-500/50 theme-focus:ring-amber-500/50' : ''} ${className}`}
     >
       {/* Widget Header - Frosted Glass & Specular Edge */}

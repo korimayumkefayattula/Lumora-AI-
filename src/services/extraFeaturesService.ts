@@ -73,7 +73,7 @@ export const ALL_20_FEATURES: ExtraFeatureItem[] = [
   {
     id: 'oral_practice_viva',
     number: 7,
-    title: 'AI Oral Practice (Viva & Presentation)',
+    title: 'AI Oral Practice',
     stage: 'Practice & Simulate',
     functionText: 'Provides viva, presentation, and oral-answer practice.',
     howItWorks: 'Choose topic → AI asks by voice/text → student answers → response is evaluated → follow-up questions are generated.',

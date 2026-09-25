@@ -190,11 +190,11 @@ export const QuickCaptureKeepWidget: React.FC<QuickCaptureKeepWidgetProps> = ({ 
   };
 
   return (
-    <div className="bg-white dark:bg-[#12121a] rounded-3xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm space-y-4">
+    <div className="clay-widget rounded-[16px] p-5 border border-slate-200 dark:border-slate-800 space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 flex items-center justify-center">
+          <div className="w-8 h-8 rounded-[12px] bg-amber-100 dark:bg-amber-950/60 text-amber-600 flex items-center justify-center">
             <StickyNote className="w-4 h-4" />
           </div>
           <div>
@@ -215,14 +215,14 @@ export const QuickCaptureKeepWidget: React.FC<QuickCaptureKeepWidgetProps> = ({ 
         <div className="flex items-center gap-1.5">
           <button
             onClick={() => setIsSpeechModalOpen(true)}
-            className="p-1.5 rounded-lg text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 border border-rose-200/60 dark:border-rose-900/60 transition-colors"
+            className="p-1.5 rounded-[10px] text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 border border-rose-200/60 dark:border-rose-900/60 transition-colors"
             title="Dictate voice note with Speech Recognition"
           >
             <Mic className="w-3.5 h-3.5" />
           </button>
           <button
             onClick={() => navigate('/student/workspace')}
-            className="text-xs font-bold text-amber-600 dark:text-amber-400 hover:text-amber-700 flex items-center gap-0.5 group px-2 py-1 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-950/30 transition-colors"
+            className="text-xs font-bold text-amber-600 dark:text-amber-400 hover:text-amber-700 flex items-center gap-0.5 group px-2 py-1 rounded-[10px] hover:bg-amber-50 dark:hover:bg-amber-950/30 transition-colors"
           >
             <span>View All</span>
             <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />

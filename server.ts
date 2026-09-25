@@ -4233,6 +4233,124 @@ Generate workload recommendations as JSON:
     { "timeSlot": "Evening (18:00 - 19:30)", "activity": "Review & light revision" }
   ]
 }`;
+      } else if (featureId === "daily_10min_revision") {
+        systemPrompt = `You are the Daily 10-Minute Revision Engine for LumoraAI.
+Subject/Topic: ${payload.topic || "Core STEM"}
+Select high-value questions from this topic for a fast daily recall session.
+Respond as JSON:
+{
+  "sessionTitle": "Daily 10-Minute High-Yield Recall",
+  "topic": "${payload.topic || "Core STEM"}",
+  "questions": [
+    {
+      "id": 1,
+      "question": "Question 1 testing key formula or definition",
+      "options": ["Option A", "Option B", "Option C", "Option D"],
+      "correct": 0,
+      "feedback": "Why Option A is correct and the underlying concept",
+      "examRelevance": "High frequency in recent papers"
+    },
+    {
+      "id": 2,
+      "question": "Question 2 testing common misconception",
+      "options": ["Option A", "Option B", "Option C", "Option D"],
+      "correct": 1,
+      "feedback": "Immediate explanation of the trap",
+      "examRelevance": "Critical distinction"
+    }
+  ],
+  "retentionTip": "Memory anchor rule for today"
+}`;
+      } else if (featureId === "study_resource_finder") {
+        systemPrompt = `You are the AI Study Resource Finder for LumoraAI.
+Topic: "${payload.topic}"
+Identify the core learning objective and organize approved, high-quality learning resources with explanations of their purpose.
+Respond as JSON:
+{
+  "topic": "${payload.topic}",
+  "learningObjective": "Clear statement of what student will be able to do/solve after studying this",
+  "resources": [
+    {
+      "type": "Video Lecture / Simulation",
+      "title": "Interactive Physical Simulation & Visual Proof",
+      "provider": "PhET / MIT OpenCourseWare / Khan Academy",
+      "purpose": "Builds geometric and spatial intuition before algebraic manipulation",
+      "estimatedMinutes": 15
+    },
+    {
+      "type": "Curated Textbook Chapter / Derivation",
+      "title": "Comprehensive First-Principles Derivation",
+      "provider": "Standard Syllabus Reference",
+      "purpose": "Provides rigorous mathematical steps required for subjective board answers",
+      "estimatedMinutes": 25
+    },
+    {
+      "type": "Problem Bank & Edge Cases",
+      "title": "Top 10 High-Yield Exam Problems",
+      "provider": "PYQ Archive",
+      "purpose": "Reinforces boundary conditions and tricky examiner traps",
+      "estimatedMinutes": 30
+    }
+  ],
+  "suggestedStudyOrder": "Start with simulation for intuition -> derive manually on paper -> solve top 5 past paper problems"
+}`;
+      } else if (featureId === "collaborative_study_room") {
+        systemPrompt = `You are the Collaborative Study Room AI Facilitator for LumoraAI.
+Room Topic: "${payload.topic}"
+Recent Shared Discussion / Questions in Room: "${payload.discussion || "Students discussed how temperature affects equilibrium and questioned whether pressure changes matter if volumes are equal."}"
+
+Summarize the peer discussion and create a targeted practice challenge as JSON:
+{
+  "roomTopic": "${payload.topic}",
+  "discussionSummary": "2-3 sentence synthesis of key concepts peers debated and reached consensus on",
+  "keyClarification": "The authoritative scientific rule that settles any lingering confusion",
+  "sharedPracticeQuiz": [
+    {
+      "question": "A challenge question for the group to solve together",
+      "options": ["Option A", "Option B", "Option C", "Option D"],
+      "correctAnswer": "Option A",
+      "solutionGuidance": "Step-by-step logic for the group"
+    }
+  ]
+}`;
+      } else if (featureId === "assignment_organizer") {
+        systemPrompt = `You are the AI Assignment Organizer for LumoraAI.
+Assignment: "${payload.assignmentTitle}"
+Subject: "${payload.subject}"
+Deadline: "${payload.deadline}"
+Difficulty / Scope: "${payload.scope || "Medium"}"
+
+Break this assignment into manageable milestones with estimated dates and calendar reminders.
+Respond as JSON:
+{
+  "assignment": "${payload.assignmentTitle}",
+  "deadline": "${payload.deadline}",
+  "milestones": [
+    { "step": 1, "title": "Research & Source Gathering", "targetDate": "Day 1-2", "estimatedHours": 2, "deliverable": "Outline and formula sheet" },
+    { "step": 2, "title": "Core Problem Solving / Drafting", "targetDate": "Day 3-4", "estimatedHours": 4, "deliverable": "Rough answers and calculations" },
+    { "step": 3, "title": "Final Review & Answer Polish", "targetDate": "Day 5", "estimatedHours": 1.5, "deliverable": "Submission-ready final copy" }
+  ],
+  "suggestedCalendarReminder": "Set reminder 48 hours prior to deadline for final review"
+}`;
+      } else if (featureId === "personal_learning_memory") {
+        systemPrompt = `You are the Personal Learning Memory engine for LumoraAI.
+Student Preferences:
+Explanation Style: ${payload.explanationStyle || "Visual & Analogy-Driven"}
+Pace: ${payload.pace || "Moderate"}
+Focus Exam: ${payload.targetExam || "JEE/NEET/Board"}
+Recent Strength: ${payload.recentStrength || "Thermodynamics"}
+Current Friction Point: ${payload.currentFriction || "Differential Equations"}
+
+Generate personalized learning recommendations as JSON:
+{
+  "adaptedExplanationStyle": "Visual analogies followed by step-by-step mathematical proofs",
+  "difficultyCalibration": "Start at Level 2 (Conceptual), dynamically ramp to Level 4 (Exam Rigor)",
+  "recommendedExamples": [
+    "Use mechanical fluid flow analogies when explaining electrical currents",
+    "Use physical spring oscillations when explaining simple harmonic motion"
+  ],
+  "customRevisionCadence": "Review formulas every 3 days, full problem set every 7 days"
+}`;
       } else {
         systemPrompt = `You are LumoraAI Academic Assistant. Process this request for ${featureId}: ${JSON.stringify(payload)}. Respond with valid JSON.`;
       }

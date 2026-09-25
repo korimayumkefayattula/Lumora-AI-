@@ -15,6 +15,7 @@ import { VoiceTutorButton } from '../components/voice/VoiceTutorButton';
 import { FloatingSelectionToolbar } from '../components/explain/FloatingSelectionToolbar';
 import { ExplainSimplyModal } from '../components/explain/ExplainSimplyModal';
 import { FloatingSidebar } from '../components/navigation/FloatingSidebar';
+import MobileBottomNav from '../components/navigation/MobileBottomNav';
 import { ThemeSwitcher } from '../components/theme/ThemeSwitcher';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
@@ -253,7 +254,7 @@ export default function StudentLayout() {
         )}
 
         {/* Main Content View with Rounded Padding */}
-        <main className="flex-1 overflow-y-auto custom-scrollbar p-2 sm:p-4 lg:p-5">
+        <main className="flex-1 overflow-y-auto custom-scrollbar p-2 sm:p-4 lg:p-5 pb-20 lg:pb-5">
           <div className={`w-full max-w-7xl mx-auto rounded-3xl min-h-full transition-colors ${
             theme === 'focus'
               ? 'bg-[#14120f] border border-[#2f2720] text-amber-100'
@@ -265,6 +266,9 @@ export default function StudentLayout() {
           </div>
         </main>
       </div>
+
+      {/* Mobile Bottom Navigation (5 Primary Destinations) */}
+      <MobileBottomNav />
 
       {/* Voice AI Tutor Float */}
       <VoiceTutorButton 

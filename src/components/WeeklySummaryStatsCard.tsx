@@ -51,13 +51,13 @@ export const WeeklySummaryStatsCard: React.FC<WeeklySummaryStatsProps> = ({
   return (
     <div
       id="weekly-summary-stats-card"
-      className={`relative overflow-hidden rounded-3xl border border-slate-200/90 dark:border-zinc-800/90 bg-white/90 dark:bg-[#12121a]/95 backdrop-blur-xl shadow-xl transition-all duration-300 ${className}`}
+      className={`relative overflow-hidden clay-widget rounded-[16px] p-5 sm:p-6 border border-slate-200/90 dark:border-zinc-800/90 transition-all duration-300 ${className}`}
     >
       {/* Decorative gradient glow */}
       <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-blue-500/10 via-rose-500/5 to-transparent rounded-full blur-3xl pointer-events-none" />
       <div className="absolute -bottom-10 -left-10 w-72 h-72 bg-gradient-to-tr from-emerald-500/10 via-indigo-500/5 to-transparent rounded-full blur-3xl pointer-events-none" />
 
-      <div className="relative p-6 sm:p-7 space-y-6">
+      <div className="relative space-y-5">
         {/* Top Header Bar */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-zinc-800/80 pb-4">
           <div>

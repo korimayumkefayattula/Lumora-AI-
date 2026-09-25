@@ -56,62 +56,61 @@ export interface NavGroup {
 
 export const NAV_GROUPS: NavGroup[] = [
   {
-    groupName: 'Core AI Learning',
-    categoryKey: 'core',
+    groupName: 'Learn',
+    categoryKey: 'learn',
     items: [
-      { name: 'Dashboard', path: '/student', icon: Sparkles },
-      { name: 'Agnes Video AI', path: '/student/agnes-videos', icon: Video, badge: 'HOT' },
-      { name: '20 Features Suite', path: '/student/extra-features', icon: Target, badge: '20+' },
-      { name: 'AI Faculty (1k+)', path: '/student/mentors', icon: Users, badge: '1000+' },
-      { name: 'Concept Explorer', path: '/student/concept-explorer', icon: Compass, badge: 'New' },
-      { name: 'Pro Upskilling', path: '/student/upskilling', icon: Video, badge: 'PRO' },
-      { name: 'AI Homework Helper', path: '/student/homework-helper', icon: Camera, badge: 'AI' },
-      { name: 'Explain Simply AI', path: '/student/explain-simply', icon: Sparkles },
       { name: 'AI Tutor', path: '/student/tutor', icon: BrainCircuit },
-      { name: 'AI Doubt Solver', path: '/student/doubt-solver', icon: BookOpen },
-      { name: 'PDF Learning', path: '/student/pdf-learning', icon: FileText }
+      { name: 'Doubt Solver', path: '/student/doubt-solver', icon: BookOpen },
+      { name: 'Homework Helper', path: '/student/homework-helper', icon: Camera, badge: 'Scan' },
+      { name: 'Explain Simply', path: '/student/explain-simply', icon: Sparkles },
+      { name: 'PDF Learning', path: '/student/pdf-learning', icon: FileText },
+      { name: 'Agnes Video AI', path: '/student/agnes-videos', icon: Video, badge: 'AI' },
+      { name: '20 Features Suite', path: '/student/extra-features', icon: Target, badge: '20+' },
+      { name: 'Concept Explorer', path: '/student/concept-explorer', icon: Compass },
+      { name: 'AI Faculty', path: '/student/mentors', icon: Users, badge: '1k+' }
     ]
   },
   {
-    groupName: 'Smart Study Generators',
-    categoryKey: 'generators',
+    groupName: 'Practice',
+    categoryKey: 'practice',
     items: [
-      { name: 'Memory Tricks', path: '/student/memory-tricks', icon: Brain, badge: 'Hacks' },
-      { name: 'Student Web Builder', path: '/student/web-builder', icon: Globe, badge: 'Lovable' },
-      { name: 'Scholar Quotes', path: '/student/quotes', icon: Sparkles },
-      { name: 'AI Summary', path: '/student/summary', icon: FileCheck },
-      { name: 'AI Notes', path: '/student/notes', icon: FileText },
-      { name: 'Flashcards', path: '/student/flashcards', icon: Layers },
-      { name: 'Quiz Generator', path: '/student/quiz', icon: TestTube },
+      { name: 'Quiz', path: '/student/quiz', icon: TestTube },
       { name: 'Mock Tests', path: '/student/mock-tests', icon: Clock },
-      { name: 'AI Mind Map', path: '/student/mind-map', icon: Brain },
-      { name: 'AI Image Gen', path: '/student/image-generator', icon: Sparkles },
-      { name: 'Infographics', path: '/student/infographic-generator', icon: PieChart }
+      { name: 'PYQs', path: '/student/pyq', icon: Sparkles },
+      { name: 'Flashcards', path: '/student/flashcards', icon: Layers },
+      { name: 'Competitions', path: '/student/competitions', icon: Trophy }
     ]
   },
   {
-    groupName: 'Planning & Revision Hub',
-    categoryKey: 'hub',
+    groupName: 'Study',
+    categoryKey: 'study',
     items: [
-      { name: 'Google Workspace', path: '/student/workspace', icon: Sparkles, badge: 'Hub' },
-      { name: 'Keep Study Notes', path: '/student/keep', icon: StickyNote, badge: 'Keep' },
       { name: 'Study Planner', path: '/student/study-planner', icon: Calendar },
-      { name: 'Calendar', path: '/student/calendar', icon: Calendar },
-      { name: 'Subjects & Chapters', path: '/student/subjects', icon: BookOpen },
-      { name: 'Previous Papers', path: '/student/pyq', icon: Sparkles },
-      { name: 'Revision Center', path: '/student/revision', icon: RefreshCw }
+      { name: 'Revision Center', path: '/student/revision', icon: RefreshCw },
+      { name: 'Notes', path: '/student/notes', icon: FileText },
+      { name: 'Mind Maps', path: '/student/mind-map', icon: Brain },
+      { name: 'Memory Tricks', path: '/student/memory-tricks', icon: Sparkles, badge: 'Hacks' },
+      { name: 'Google Keep', path: '/student/keep', icon: StickyNote, badge: 'Keep' },
+      { name: 'Google Workspace', path: '/student/workspace', icon: FolderOpen }
     ]
   },
   {
-    groupName: 'Analytics & Community',
-    categoryKey: 'growth',
+    groupName: 'Progress',
+    categoryKey: 'progress',
     items: [
-      { name: 'Analytics & PDF', path: '/student/analytics', icon: BarChart3 },
-      { name: 'Subject Arenas', path: '/student/competitions', icon: Trophy, badge: 'Live' },
-      { name: 'Pro Pricing', path: '/student/pricing', icon: Zap, badge: 'Pro' },
-      { name: 'Goals', path: '/student/goals', icon: Target },
-      { name: 'Community', path: '/student/community', icon: Users },
-      { name: 'Leaderboard', path: '/student/leaderboard', icon: Trophy }
+      { name: 'Analytics', path: '/student/analytics', icon: BarChart3 },
+      { name: 'Subject Progress', path: '/student/subjects', icon: BookOpen },
+      { name: 'Weak Areas & Goals', path: '/student/goals', icon: Target },
+      { name: 'Leaderboard', path: '/student/leaderboard', icon: Trophy },
+      { name: 'Community', path: '/student/community', icon: Users }
+    ]
+  },
+  {
+    groupName: 'Profile',
+    categoryKey: 'profile',
+    items: [
+      { name: 'Student Profile', path: '/student/profile', icon: User },
+      { name: 'Pro Upgrades', path: '/student/pricing', icon: Zap, badge: 'Pro' }
     ]
   }
 ];
@@ -147,7 +146,7 @@ export const FloatingSidebar: React.FC<FloatingSidebarProps> = ({
     };
   }).filter(Boolean) as NavGroup[];
 
-  const sidebarWidthClass = isCollapsed ? 'w-20' : 'w-72';
+  const sidebarWidthClass = isCollapsed ? 'w-20' : 'w-60';
 
   return (
     <aside 
@@ -218,14 +217,14 @@ export const FloatingSidebar: React.FC<FloatingSidebarProps> = ({
             )}
           </div>
 
-          {/* Category Filter Pills */}
+          {/* Category Filter Pills aligned to Global Architecture */}
           <div className="flex items-center gap-1 overflow-x-auto no-scrollbar pb-1 text-[11px] font-bold">
             {[
               { key: 'all', label: 'All' },
-              { key: 'core', label: 'Core' },
-              { key: 'generators', label: 'Generators' },
-              { key: 'hub', label: 'Hub' },
-              { key: 'growth', label: 'Growth' }
+              { key: 'learn', label: 'Learn' },
+              { key: 'practice', label: 'Practice' },
+              { key: 'study', label: 'Study' },
+              { key: 'progress', label: 'Progress' }
             ].map((cat) => (
               <button
                 key={cat.key}
